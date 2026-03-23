@@ -48,16 +48,16 @@ function focusCard(d, rank, settings) {
   if (d._isOverdue) {
     recommendation = `This is overdue. Complete what you can and move on, or update the due date.`;
   } else if (d._startStatus === 'behind') {
-    recommendation = `You need to start immediately. Dedicate ${formatHours(d._dailyEffort)} today.`;
+    recommendation = `You need to start immediately. Begin working on this today.`;
   } else if (d._startStatus === 'start-today') {
-    recommendation = `Start today to stay on track. Allocate ${formatHours(d._dailyEffort)} of focused time.`;
+    recommendation = `Start today to stay on track.`;
   } else if (d._dailyEffort > safeNum(settings.workHoursPerDay, 6)) {
     recommendation = `Daily effort needed exceeds your work hours. Consider breaking this into smaller sessions.`;
   } else if (d.subtasks && d.subtasks.length > 0) {
     const nextSubtask = d.subtasks.find(s => !s.done);
     if (nextSubtask) recommendation = `Next subtask: "${truncate(nextSubtask.title, 50)}"`;
   } else {
-    recommendation = `Dedicate ${formatHours(d._dailyEffort)} today to stay safe.`;
+    recommendation = `Stay on schedule — keep making consistent progress.`;
   }
 
   return `<div class="focus-card" style="border-left:4px solid ${color}">
@@ -105,7 +105,7 @@ function renderFocusWorkloadBar(items, settings) {
       <div class="workload-bar-wrap" style="flex:1">
         <div class="workload-bar" style="width:${Math.min(100, pct)}%;background:${color}"></div>
       </div>
-      <span style="font-weight:700;color:${color};white-space:nowrap">${formatHours(totalLoad)} / ${wph}h</span>
+      <span style="font-weight:700;color:${color};white-space:nowrap">${formatHours(totalLoad)}</span>
     </div>
     <p style="font-size:.82rem;color:${color}">${escapeHTML(msg)}</p>
   `;
