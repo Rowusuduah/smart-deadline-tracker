@@ -22,3 +22,6 @@ node_modules/
 dist/
 .env
 .env.local
+
+# Auto-commit watcher output (the script itself is tracked, but not its logs)
+*.log
