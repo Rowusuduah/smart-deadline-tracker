@@ -5,6 +5,97 @@
                and all ui-*.js modules.
 ═══════════════════════════════════════════════════════════════ */
 
+// ─── Auth ─────────────────────────────────────────────────────────
+const AUTH_KEY      = 'sdt_auth';
+// SHA-256 of the password — never store the plain password
+const PASS_HASH     = '4579c55b004189200a19c4457a3528b4895765d4b538442901d1c88dd9847624';
+
+async function hashPassword(password) {
+  const msgBuffer  = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function isAuthenticated() {
+  return localStorage.getItem(AUTH_KEY) === '1';
+}
+
+function setAuthenticated(value) {
+  if (value) localStorage.setItem(AUTH_KEY, '1');
+  else localStorage.removeItem(AUTH_KEY);
+}
+
+function showApp() {
+  const gate = document.getElementById('login-gate');
+  if (gate) gate.classList.add('hidden');
+}
+
+function showLoginGate(errorMsg) {
+  const gate = document.getElementById('login-gate');
+  if (gate) gate.classList.remove('hidden');
+  const input = document.getElementById('login-password');
+  if (input) { input.value = ''; input.focus(); }
+  if (errorMsg) {
+    const err = document.getElementById('login-error');
+    if (err) err.textContent = errorMsg;
+  }
+}
+
+function lockApp() {
+  setAuthenticated(false);
+  showLoginGate();
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const input    = document.getElementById('login-password');
+  const errorEl  = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+  const password = (input?.value || '').trim();
+
+  if (!password) {
+    if (errorEl) errorEl.textContent = 'Please enter your password.';
+    return;
+  }
+
+  btn.textContent = 'Checking…';
+  btn.disabled    = true;
+
+  const hash = await hashPassword(password);
+
+  if (hash === PASS_HASH) {
+    setAuthenticated(true);
+    if (errorEl) errorEl.textContent = '';
+    showApp();
+    initApp();
+  } else {
+    if (errorEl) errorEl.textContent = 'Incorrect password. Try again.';
+    if (input)   { input.value = ''; input.focus(); }
+  }
+
+  btn.textContent = 'Unlock';
+  btn.disabled    = false;
+}
+
+function bindAuthEvents() {
+  document.getElementById('login-form')?.addEventListener('submit', handleLogin);
+
+  // Show/hide password toggle
+  document.getElementById('login-eye')?.addEventListener('click', () => {
+    const input = document.getElementById('login-password');
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    input.focus();
+  });
+
+  // Lock button in nav
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    if (confirm('Lock the app?')) lockApp();
+  });
+}
+
 const APP_NAME           = 'Smart Deadline Tracker';
 const GDRIVE_CLIENT_ID   = '';  // TODO: paste your Google Cloud OAuth Client ID
 const GDRIVE_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
@@ -885,7 +976,8 @@ function bindEvents() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────
-function init() {
+// Called only after successful login
+function initApp() {
   scanAndFlagOverdue();
   initTheme();
   populateCategorySelects();
@@ -902,6 +994,16 @@ function init() {
     }
     setTimeout(tryAuto, 800);
   }
+}
+
+// Entry point — always runs; checks auth first
+function init() {
+  bindAuthEvents();
+  if (isAuthenticated()) {
+    showApp();
+    initApp();
+  }
+  // If not authenticated, login gate is already visible (default HTML state)
 }
 
 document.addEventListener('DOMContentLoaded', init);

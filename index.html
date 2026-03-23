@@ -15,6 +15,35 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
+  <!-- ══ LOGIN GATE ════════════════════════════════════════════════ -->
+  <div id="login-gate" aria-modal="true" role="dialog" aria-label="Login">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="dot" style="width:12px;height:12px"></span>
+        <span class="login-app-name">Deadline Tracker</span>
+      </div>
+      <p class="login-sub">Enter your password to continue</p>
+      <form id="login-form" autocomplete="off">
+        <div class="login-field">
+          <input
+            type="password"
+            id="login-password"
+            placeholder="Password"
+            autocomplete="current-password"
+            autofocus
+            aria-label="Password"
+          >
+          <button type="button" id="login-eye" aria-label="Show/hide password" tabindex="-1">👁</button>
+        </div>
+        <p id="login-error" class="login-error" aria-live="polite"></p>
+        <button type="submit" class="btn btn-green" id="login-btn" style="width:100%;margin-top:4px">
+          Unlock
+        </button>
+      </form>
+    </div>
+  </div>
+
   <a class="skip-link" href="#main">Skip to main content</a>
 
   <!-- ══ NAV ══════════════════════════════════════════════════════ -->
@@ -36,6 +65,7 @@
 
     <button class="nav-add-btn" id="btn-add-deadline" aria-label="Add new deadline">+ Add</button>
     <button id="theme-toggle" aria-label="Toggle light/dark theme">☀️</button>
+    <button id="logout-btn" aria-label="Lock app" title="Lock">🔒</button>
   </nav>
 
   <!-- ══ MAIN ══════════════════════════════════════════════════════ -->

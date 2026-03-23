@@ -1,3 +1,66 @@
+/* ─── Login Gate ─────────────────────────────────────────────── */
+#login-gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0c0c12;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#login-gate.hidden { display: none; }
+.login-card {
+  background: #14141e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 36px 32px;
+  width: 100%; max-width: 360px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.6);
+  text-align: center;
+}
+.login-logo {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 8px;
+}
+.login-app-name {
+  font-size: 1.15rem; font-weight: 800; letter-spacing: -.3px;
+  color: #ededf5;
+}
+.login-sub {
+  font-size: .83rem; color: #8a8aa6; margin-bottom: 24px;
+}
+.login-field {
+  position: relative; margin-bottom: 10px;
+}
+.login-field input {
+  width: 100%; background: #1c1c28;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px; color: #ededf5;
+  padding: 12px 42px 12px 14px;
+  font-size: 14px; font-family: inherit;
+  outline: none; transition: border-color .15s;
+  text-align: center; letter-spacing: .08em;
+}
+.login-field input:focus { border-color: #4ade80; }
+.login-field input::placeholder { letter-spacing: 0; }
+#login-eye {
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  font-size: 15px; opacity: .5; padding: 4px;
+  transition: opacity .15s;
+}
+#login-eye:hover { opacity: 1; }
+.login-error {
+  font-size: .78rem; color: #f87171;
+  min-height: 18px; margin-bottom: 6px;
+}
+#logout-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #1c1c28; border: 1px solid rgba(255,255,255,0.07);
+  font-size: 14px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .15s; margin-left: 2px;
+}
+#logout-btn:hover { background: rgba(255,255,255,.1); transform: scale(1.1); }
+
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
   --bg:       #0c0c12;
