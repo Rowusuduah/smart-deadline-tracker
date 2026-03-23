@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Smart Deadline Tracker — intelligent deadline management with urgency scoring, workload planning, and risk detection.">
+  <meta name="theme-color" content="#4ade80">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Deadline Tracker">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <title>Smart Deadline Tracker</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ══ NAV ══════════════════════════════════════════════════════ -->
+  <nav id="nav" aria-label="Main navigation">
+    <div class="nav-brand" aria-hidden="true">
+      <span class="dot"></span>
+      <span>Deadline Tracker</span>
+    </div>
+
+    <div role="tablist" aria-label="App sections">
+      <button role="tab" id="tab-dashboard" aria-selected="true"  aria-controls="sec-dashboard" tabindex="0">Dashboard</button>
+      <button role="tab" id="tab-deadlines" aria-selected="false" aria-controls="sec-deadlines" tabindex="-1">Deadlines</button>
+      <button role="tab" id="tab-calendar"  aria-selected="false" aria-controls="sec-calendar"  tabindex="-1">Calendar</button>
+      <button role="tab" id="tab-timeline"  aria-selected="false" aria-controls="sec-timeline"  tabindex="-1">Timeline</button>
+      <button role="tab" id="tab-focus"     aria-selected="false" aria-controls="sec-focus"     tabindex="-1">Focus</button>
+      <button role="tab" id="tab-analytics" aria-selected="false" aria-controls="sec-analytics" tabindex="-1">Analytics</button>
+      <button role="tab" id="tab-settings"  aria-selected="false" aria-controls="sec-settings"  tabindex="-1">Settings</button>
+    </div>
+
+    <button class="nav-add-btn" id="btn-add-deadline" aria-label="Add new deadline">+ Add</button>
+    <button id="theme-toggle" aria-label="Toggle light/dark theme">☀️</button>
+  </nav>
+
+  <!-- ══ MAIN ══════════════════════════════════════════════════════ -->
+  <main id="main">
+
+    <!-- ══ DASHBOARD ════════════════════════════════════════════ -->
+    <section id="sec-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" class="sec on">
+      <h1 class="section-title">Dashboard</h1>
+      <p class="section-sub">Your deadline intelligence at a glance.</p>
+
+      <!-- KPI Strip -->
+      <div class="summary-grid" id="dash-kpis" aria-live="polite"></div>
+
+      <!-- Main grid: Urgent + At-Risk | Workload + Category -->
+      <div class="two-col">
+
+        <!-- Left column -->
+        <div>
+          <div class="card">
+            <div class="card-title">
+              Top Urgent
+              <button class="btn btn-ghost btn-sm" onclick="switchTab('tab-deadlines')">View all →</button>
+            </div>
+            <div id="dash-urgent" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Due Today &amp; Overdue</div>
+            <div id="dash-due-today" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <div class="card">
+            <div class="card-title">At Risk</div>
+            <div id="dash-at-risk" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Workload</div>
+            <div id="dash-workload" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Category Load</div>
+            <div id="dash-cat-load" aria-live="polite"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══ DEADLINES ════════════════════════════════════════════ -->
+    <section id="sec-deadlines" role="tabpanel" aria-labelledby="tab-deadlines" class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h1 class="section-title">All Deadlines</h1>
+        <button class="btn btn-green btn-sm" id="btn-add-deadline-list">+ Add Deadline</button>
+      </div>
+      <p class="section-sub">Search, filter, and manage your full deadline list.</p>
+
+      <!-- Filters -->
+      <div class="filter-bar" aria-label="Filters">
+        <input type="search" id="list-search" placeholder="Search deadlines…" aria-label="Search deadlines" style="min-width:180px">
+        <select id="list-filter-category" class="category-select" aria-label="Filter by category">
+          <option value="">All Categories</option>
+        </select>
+        <select id="list-filter-status" aria-label="Filter by status">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="not-started">Not Started</option>
+          <option value="planned">Planned</option>
+          <option value="in-progress">In Progress</option>
+          <option value="at-risk">At Risk</option>
+          <option value="overdue">Overdue</option>
+          <option value="completed">Completed</option>
+          <option value="paused">Paused</option>
+        </select>
+        <select id="list-filter-priority" aria-label="Filter by priority">
+          <option value="">All Priorities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select id="list-sort" aria-label="Sort by">
+          <option value="urgency">Sort: Urgency</option>
+          <option value="due-asc">Due Date ↑</option>
+          <option value="due-desc">Due Date ↓</option>
+          <option value="priority">Priority</option>
+          <option value="progress-asc">Progress ↑</option>
+          <option value="progress-desc">Progress ↓</option>
+          <option value="title">Title A–Z</option>
+          <option value="created">Newest First</option>
+        </select>
+        <select id="list-view-mode" aria-label="View mode">
+          <option value="compact">Compact</option>
+          <option value="detailed">Detailed</option>
+        </select>
+        <label style="font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="list-show-archived"> Show Archived
+        </label>
+      </div>
+
+      <!-- Active filter chips -->
+      <div id="active-filters" aria-label="Active filters"></div>
+
+      <!-- Bulk action bar -->
+      <div id="bulk-bar" class="hidden" role="toolbar" aria-label="Bulk actions">
+        <span id="bulk-count" style="font-weight:700">0 selected</span>
+        <button class="btn btn-ghost btn-sm" id="bulk-select-all">Select All</button>
+        <button class="btn btn-ghost btn-sm" id="bulk-deselect">Deselect</button>
+        <button class="btn btn-ghost btn-sm" id="bulk-complete">Complete</button>
+        <button class="btn btn-ghost btn-sm" id="bulk-archive">Archive</button>
+        <button class="btn btn-ghost btn-sm text-red" id="bulk-delete">Delete</button>
+      </div>
+
+      <!-- List -->
+      <div id="deadlines-list" aria-live="polite" aria-label="Deadlines list"></div>
+    </section>
+
+    <!-- ══ CALENDAR ══════════════════════════════════════════════ -->
+    <section id="sec-calendar" role="tabpanel" aria-labelledby="tab-calendar" class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <h1 class="section-title">Calendar</h1>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="cal-today">Today</button>
+          <button class="icon-btn" id="cal-prev" aria-label="Previous month">‹</button>
+          <strong id="cal-title" style="font-size:.9rem;min-width:120px;text-align:center"></strong>
+          <button class="icon-btn" id="cal-next" aria-label="Next month">›</button>
+          <button class="btn btn-green btn-sm" data-action="quick-add" data-date="">+ Add</button>
+        </div>
+      </div>
+
+      <div id="cal-grid" aria-label="Calendar grid"></div>
+
+      <!-- Day popup -->
+      <div id="cal-popup" role="dialog" aria-modal="true" aria-label="Day details" style="display:none">
+        <!-- Rendered by renderCalendarDayPopup() -->
+      </div>
+    </section>
+
+    <!-- ══ TIMELINE ══════════════════════════════════════════════ -->
+    <section id="sec-timeline" role="tabpanel" aria-labelledby="tab-timeline" class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h1 class="section-title">Timeline</h1>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label for="timeline-group-by" style="font-size:.8rem;color:var(--muted)">Group by</label>
+          <select id="timeline-group-by" aria-label="Group by">
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
+        </div>
+      </div>
+      <p class="section-sub">Your upcoming deadlines plotted on a visual roadmap.</p>
+
+      <div id="timeline-content" aria-live="polite"></div>
+    </section>
+
+    <!-- ══ FOCUS MODE ════════════════════════════════════════════ -->
+    <section id="sec-focus" role="tabpanel" aria-labelledby="tab-focus" class="sec">
+      <h1 class="section-title">Focus Mode</h1>
+      <p class="section-sub">What to work on right now — no distractions.</p>
+
+      <!-- Nudges -->
+      <div id="focus-nudge" aria-live="polite" style="margin-bottom:12px"></div>
+
+      <!-- Workload bar -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Today's Workload</div>
+        <div id="focus-workload"></div>
+      </div>
+
+      <!-- Top 3 -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Top Priority Actions</div>
+        <div id="focus-top3" aria-live="polite"></div>
+      </div>
+
+      <!-- Recovery plan -->
+      <div class="card">
+        <div class="card-title">Schedule Recovery</div>
+        <div id="focus-recovery" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ══ ANALYTICS ════════════════════════════════════════════ -->
+    <section id="sec-analytics" role="tabpanel" aria-labelledby="tab-analytics" class="sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h1 class="section-title">Analytics</h1>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label for="analytics-period" style="font-size:.8rem;color:var(--muted)">Period:</label>
+          <select id="analytics-period" aria-label="Analytics period">
+            <option value="7">7 days</option>
+            <option value="14">14 days</option>
+            <option value="30" selected>30 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </div>
+      </div>
+      <p class="section-sub">Understand your patterns, performance, and procrastination tendencies.</p>
+
+      <!-- KPIs -->
+      <div class="summary-grid" id="analytics-kpis" aria-live="polite"></div>
+
+      <!-- Charts -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Completion Trend</div>
+          <div id="analytics-trend-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Effort Accuracy</div>
+          <div id="analytics-effort"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Category Breakdown</div>
+        <div id="analytics-categories"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Behavioral Insights</div>
+        <div id="analytics-procrastination"></div>
+      </div>
+    </section>
+
+    <!-- ══ SETTINGS ══════════════════════════════════════════════ -->
+    <section id="sec-settings" role="tabpanel" aria-labelledby="tab-settings" class="sec">
+      <h1 class="section-title">Settings</h1>
+      <p class="section-sub">Customize your planning assumptions, appearance, and data.</p>
+
+      <!-- Planning Settings -->
+      <div class="card">
+        <div class="card-title">Planning Assumptions</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="set-work-hours">Work Hours per Day</label>
+            <input type="number" id="set-work-hours" min="1" max="24" step="0.5" placeholder="6">
+          </div>
+          <div class="form-group">
+            <label for="set-buffer-days">Buffer Days (before due)</label>
+            <input type="number" id="set-buffer-days" min="0" max="14" step="1" placeholder="1">
+          </div>
+          <div class="form-group">
+            <label for="set-def-category">Default Category</label>
+            <select id="set-def-category" class="category-select" aria-label="Default category"></select>
+          </div>
+          <div class="form-group">
+            <label for="set-def-priority">Default Priority</label>
+            <select id="set-def-priority">
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="set-def-est-hours">Default Estimated Hours</label>
+            <input type="number" id="set-def-est-hours" min="0" max="1000" step="0.5" placeholder="2">
+          </div>
+          <div class="form-group">
+            <label for="set-completed-days">Show Completed For (days)</label>
+            <input type="number" id="set-completed-days" min="0" max="365" step="1" placeholder="7">
+          </div>
+          <div class="form-group">
+            <label for="set-color-mode">Urgency Color Mode</label>
+            <select id="set-color-mode">
+              <option value="urgency">Time-Based Urgency</option>
+              <option value="category">Category-Based</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content:flex-end;padding-top:10px">
+            <label for="set-include-weekends" style="flex-direction:row;gap:8px;align-items:center;cursor:pointer">
+              <input type="checkbox" id="set-include-weekends"> Count weekends as workdays
+            </label>
+          </div>
+        </div>
+        <div class="controls-bar" style="margin-top:14px">
+          <button class="btn btn-green" id="settings-save-btn">Save Settings</button>
+        </div>
+      </div>
+
+      <!-- Category Manager -->
+      <div class="card">
+        <div class="card-title">Categories</div>
+        <div id="cat-manager-list"></div>
+        <div class="form-grid" style="margin-top:12px;grid-template-columns:1fr 1fr auto auto auto">
+          <div class="form-group">
+            <label for="new-cat-name">New Category Name</label>
+            <input type="text" id="new-cat-name" placeholder="e.g. Freelance" maxlength="40">
+          </div>
+          <div class="form-group">
+            <label for="new-cat-icon">Icon (emoji)</label>
+            <input type="text" id="new-cat-icon" placeholder="💼" maxlength="4" style="width:60px">
+          </div>
+          <div class="form-group">
+            <label for="new-cat-color">Color</label>
+            <input type="color" id="new-cat-color" value="#60a5fa">
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-add-cat" style="margin-top:8px">+ Add Category</button>
+      </div>
+
+      <!-- Data Management -->
+      <div class="card">
+        <div class="card-title">Data Management</div>
+        <div class="controls-bar" style="flex-wrap:wrap">
+          <button class="btn btn-ghost" id="btn-export-json">Export JSON</button>
+          <button class="btn btn-ghost" id="btn-export-csv">Export CSV</button>
+          <label class="btn btn-ghost" style="cursor:pointer">
+            Import JSON
+            <input type="file" id="btn-import-json" accept=".json" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
+          </label>
+          <button class="btn btn-ghost text-red" id="btn-reset-all">Reset All Data</button>
+        </div>
+      </div>
+
+      <!-- Google Drive Sync -->
+      <div class="card">
+        <div class="card-title">Google Drive Sync</div>
+        <p style="color:var(--muted);font-size:.83rem;margin-bottom:12px;line-height:1.5">
+          Back up your data to Google Drive. Requires a Google Cloud OAuth Client ID — add it to <code>js/app.js</code>.
+        </p>
+        <div class="controls-bar">
+          <button class="btn btn-green" id="btn-save-drive">Save to Drive</button>
+          <button class="btn btn-ghost" id="btn-load-drive">Load from Drive</button>
+        </div>
+        <p id="gdrive-status" aria-live="polite" style="margin-top:6px;font-size:.78rem;color:var(--muted)"></p>
+      </div>
+
+      <!-- About -->
+      <div class="card">
+        <div class="card-title">About</div>
+        <p style="color:var(--muted);font-size:.83rem;line-height:1.6">
+          <strong>Smart Deadline Tracker</strong> — intelligent deadline management with urgency scoring, workload planning, risk detection, and behavioral insights.<br><br>
+          Data is stored locally in your browser. Use Export/Import or Drive Sync to keep your data safe.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══ MODALS / OVERLAYS ════════════════════════════════════════ -->
+
+  <!-- Add/Edit Deadline Modal -->
+  <div id="deadline-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading" aria-hidden="true">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <h2 id="modal-heading">Add Deadline</h2>
+        <button class="icon-btn" id="modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body" id="modal-form-body">
+        <!-- Populated by buildModalForm() -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-green" id="modal-save-btn">Add Deadline</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Panel Overlay -->
+  <div id="detail-overlay" aria-hidden="true"></div>
+
+  <!-- Detail Side Panel -->
+  <aside id="detail-panel" role="complementary" aria-label="Deadline details" aria-hidden="true">
+    <div class="detail-panel-header">
+      <h3>Details</h3>
+      <button class="icon-btn" id="detail-close" aria-label="Close details">×</button>
+    </div>
+    <div id="detail-body">
+      <!-- Populated by renderDetailPanel() -->
+    </div>
+  </aside>
+
+  <!-- ══ SCRIPTS ══════════════════════════════════════════════════ -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.warn('[SW] Registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+  <!-- Load order: utils → storage → calculations → state → deadlines → UI modules → app -->
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/calculations.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/deadlines.js"></script>
+  <script src="js/ui-dashboard.js"></script>
+  <script src="js/ui-list.js"></script>
+  <script src="js/ui-calendar.js"></script>
+  <script src="js/ui-timeline.js"></script>
+  <script src="js/ui-focus.js"></script>
+  <script src="js/ui-analytics.js"></script>
+  <script src="js/ui-settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
