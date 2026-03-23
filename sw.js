@@ -1,7 +1,7 @@
 'use strict';
 
 // TODO: bump CACHE_NAME (e.g. myapp-v2) every time you deploy changes to CSS/JS/HTML
-const CACHE_NAME = 'sdt-v1';
+const CACHE_NAME = 'sdt-v2';
 const APP_SHELL  = [
   './index.html',
   './css/styles.css',
