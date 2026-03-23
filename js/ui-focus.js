@@ -101,11 +101,10 @@ function renderFocusWorkloadBar(items, settings) {
 
   el.innerHTML = `
     <div class="workload-label">Today's required effort across all active deadlines:</div>
-    <div style="display:flex;align-items:center;gap:12px;margin:8px 0">
-      <div class="workload-bar-wrap" style="flex:1">
+    <div style="margin:8px 0">
+      <div class="workload-bar-wrap">
         <div class="workload-bar" style="width:${Math.min(100, pct)}%;background:${color}"></div>
       </div>
-      <span style="font-weight:700;color:${color};white-space:nowrap">${formatHours(totalLoad)}</span>
     </div>
     <p style="font-size:.82rem;color:${color}">${escapeHTML(msg)}</p>
   `;
