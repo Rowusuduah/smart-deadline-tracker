@@ -186,9 +186,8 @@ function renderFocusRecovery(items, settings) {
         ${daysLeft === 0
           ? '<span class="text-red">Due today</span>'
           : `<span>${daysLeft} days left</span>`}
-        <span> · Need <strong class="${isRealistic ? 'text-gold' : 'text-red'}">${formatHours(dailyNeeded)}/day</strong></span>
         ${!isRealistic
-          ? `<span class="text-red"> — exceeds ${wph}h/day limit. Negotiate deadline or reduce scope.</span>`
+          ? `<span class="text-red"> — Negotiate deadline or reduce scope.</span>`
           : '<span class="text-green"> — achievable with focus.</span>'}
       </div>
       <div style="margin-top:6px;display:flex;gap:6px">

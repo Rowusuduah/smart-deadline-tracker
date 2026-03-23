@@ -590,7 +590,6 @@ function renderDetailPanel(id) {
       ${d.estimatedHours > 0 ? `
       <div class="detail-row"><span class="detail-lbl">Estimated</span><span>${formatHours(d.estimatedHours)}</span></div>
       <div class="detail-row"><span class="detail-lbl">Remaining</span><span>${formatHours(d._remainingHours)}</span></div>
-      <div class="detail-row"><span class="detail-lbl">Daily Need</span><span class="${d._dailyEffort > 6 ? 'text-red' : d._dailyEffort > 3 ? 'text-orange' : 'text-green'}">${formatHours(d._dailyEffort)}/day</span></div>
       ` : ''}
       <div class="detail-row"><span class="detail-lbl">Start By</span><span style="color:${d._startStatus === 'behind' ? 'var(--red)' : d._startStatus === 'start-today' ? 'var(--orange)' : 'var(--green)'}">${formatDate(d._recStartDate)}</span></div>
     </div>

@@ -75,10 +75,6 @@ function urgentCard(d) {
         <span class="cat-badge">${catLabel}</span>
       </div>
     </div>
-    ${d.estimatedHours > 0 ? `<div class="dc-effort">
-      <span class="effort-label">Daily effort needed:</span>
-      <span class="effort-value ${d._dailyEffort > 6 ? 'text-red' : d._dailyEffort > 3 ? 'text-orange' : 'text-green'}">${formatHours(d._dailyEffort)}/day</span>
-    </div>` : ''}
     ${d.estimatedHours > 0 ? progressBar(d._progress, color) : ''}
     <div class="dc-footer">
       <span class="start-msg ${d._startStatus}">${escapeHTML(startMsg)}</span>

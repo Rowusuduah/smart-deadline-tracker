@@ -166,7 +166,7 @@ function timelineCard(d, isOverdueSection) {
       </div>
       ${d.estimatedHours > 0 ? `
       <div class="tl-effort">
-        <span>${formatHours(d._remainingHours)} remaining · ${formatHours(d._dailyEffort)}/day needed</span>
+        <span>${formatHours(d._remainingHours)} remaining</span>
       </div>
       <div class="progress-wrap" style="margin-top:4px">
         <div class="progress-bar" style="width:${prog}%;background:${color}"></div>

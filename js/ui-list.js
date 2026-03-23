@@ -127,7 +127,6 @@ function detailedRow(d) {
     ${d.estimatedHours > 0 ? `
     <div class="detailed-effort">
       <span>Effort: ${formatHours(d._remainingHours)} remaining</span>
-      <span style="margin-left:12px">Daily: <strong class="${d._dailyEffort > 6 ? 'text-red' : d._dailyEffort > 3 ? 'text-orange' : 'text-green'}">${formatHours(d._dailyEffort)}/day</strong></span>
     </div>
     <div class="progress-wrap" style="margin:4px 0">
       <div class="progress-bar" style="width:${prog}%;background:${color}"></div>
