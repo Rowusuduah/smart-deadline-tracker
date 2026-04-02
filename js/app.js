@@ -68,6 +68,7 @@ function resetIdleTimer() { _lastActivity = Date.now(); }
 
 setInterval(() => {
   if (isAuthenticated() && Date.now() - _lastActivity > IDLE_TIMEOUT_MS) {
+    clearInterval(_countdownTimer);
     setAuthenticated(false);
     location.reload();
   }
@@ -208,6 +209,7 @@ function _gSetStatus(msg, isError) {
   const el = document.getElementById('gdrive-status');
   if (el) { el.textContent = msg; el.style.color = isError ? 'var(--red)' : 'var(--muted)'; }
 }
+let _saveToDriveRetries = 0;
 function saveToDrive() {
   gWithToken(async () => {
     try {
@@ -219,12 +221,15 @@ function saveToDrive() {
       if (fileId) { await _gUpdateFile(fileId, json); } else { fileId = await _gCreateFile(json); localStorage.setItem(KEY_GDRIVE_FILE, fileId); }
       localStorage.setItem(KEY_GDRIVE_CONNECTED, '1');
       _gSetStatus(`Saved ${new Date().toLocaleTimeString()}`);
+      _saveToDriveRetries = 0;
     } catch (err) {
-      if (err._gStatus === 401) { saveToDrive(); return; }
+      if (err._gStatus === 401 && _saveToDriveRetries < 1) { _saveToDriveRetries++; saveToDrive(); return; }
+      _saveToDriveRetries = 0;
       _gSetStatus('Save failed', true); console.error('[Drive]', err); alert('Save to Drive failed.');
     }
   });
 }
+let _loadFromDriveRetries = 0;
 function loadFromDrive() {
   gWithToken(async () => {
     try {
@@ -241,8 +246,10 @@ function loadFromDrive() {
       valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
       localStorage.setItem(KEY_GDRIVE_CONNECTED, '1');
       initTheme(); renderAll(); _gSetStatus(`Loaded ${parsed._exported || ''}`);
+      _loadFromDriveRetries = 0;
     } catch (err) {
-      if (err._gStatus === 401) { loadFromDrive(); return; }
+      if (err._gStatus === 401 && _loadFromDriveRetries < 1) { _loadFromDriveRetries++; loadFromDrive(); return; }
+      _loadFromDriveRetries = 0;
       _gSetStatus('Load failed', true); alert('Load from Drive failed.');
     }
   });
@@ -821,6 +828,8 @@ function handleAction(action, id, extra) {
 }
 
 function bindEvents() {
+  if (bindEvents._bound) return;
+  bindEvents._bound = true;
   // Tab navigation — click
   const tablist = document.querySelector('[role="tablist"]');
   if (tablist && !tablist._delegated) {
@@ -1041,8 +1050,12 @@ function initApp() {
   startCountdownTicker();
   // Auto-sync Drive if previously connected
   if (localStorage.getItem(KEY_GDRIVE_CONNECTED)) {
+    let _tryAutoAttempts = 0;
     function tryAuto() {
-      if (typeof google === 'undefined' || !google.accounts?.oauth2) { setTimeout(tryAuto, 500); return; }
+      if (typeof google === 'undefined' || !google.accounts?.oauth2) {
+        if (++_tryAutoAttempts >= 20) { console.warn('[GDrive] Google lib not available after 20 attempts, giving up.'); return; }
+        setTimeout(tryAuto, 500); return;
+      }
       if (!_gTokenClient) initGDrive();
       _gIsAutoSync = true; _gPendingOp = () => {};
       _gTokenClient.requestAccessToken({ prompt: '' });
@@ -1070,3 +1083,9 @@ window.addEventListener('storage', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', init);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('[sw] Registration failed:', err));
+  });
+}

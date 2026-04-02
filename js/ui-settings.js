@@ -62,10 +62,10 @@ function renderCategoryManager() {
   }
   el.innerHTML = cats.map(c => `
     <div class="cat-manager-row" data-cat-id="${escapeHTML(c.id)}">
-      <span class="cat-dot" style="background:${c.color};width:14px;height:14px;border-radius:50%;display:inline-block"></span>
-      <span class="cat-manager-icon">${c.icon || ''}</span>
+      <span class="cat-dot" style="background:${safeColor(c.color, '#888')};width:14px;height:14px;border-radius:50%;display:inline-block"></span>
+      <span class="cat-manager-icon">${escapeHTML(c.icon || '')}</span>
       <span class="cat-manager-name">${escapeHTML(c.name)}</span>
-      <input type="color" class="cat-color-picker" value="${c.color}" data-cat-id="${escapeHTML(c.id)}" title="Pick color" aria-label="Color for ${escapeHTML(c.name)}">
+      <input type="color" class="cat-color-picker" value="${safeColor(c.color, '#888')}" data-cat-id="${escapeHTML(c.id)}" title="Pick color" aria-label="Color for ${escapeHTML(c.name)}">
       <button class="icon-btn sm text-red" data-action="delete-cat" data-cat-id="${escapeHTML(c.id)}" title="Delete category"
         ${c.id === 'personal' || c.id === 'work' ? 'disabled title="Default categories cannot be deleted"' : ''}>✕</button>
     </div>
@@ -100,6 +100,7 @@ function deleteCategory(id) {
 }
 
 function updateCategoryColor(catId, color) {
+  if (!isValidColor(color)) return;
   const cats = loadCategories().map(c => c.id === catId ? { ...c, color } : c);
   saveCategories(cats);
 }

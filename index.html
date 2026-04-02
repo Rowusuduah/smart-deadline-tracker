@@ -199,7 +199,7 @@
       <div id="cal-grid" aria-label="Calendar grid"></div>
 
       <!-- Day popup -->
-      <div id="cal-popup" role="dialog" aria-modal="true" aria-label="Day details" style="display:none">
+      <div id="cal-popup" role="dialog" aria-modal="true" aria-label="Day details">
         <!-- Rendered by renderCalendarDayPopup() -->
       </div>
     </section>
@@ -423,17 +423,6 @@
 
   <!-- ══ SCRIPTS ══════════════════════════════════════════════════ -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => {
-          console.warn('[SW] Registration failed:', err);
-        });
-      });
-    }
-  </script>
-
   <!-- Load order: utils → storage → calculations → state → deadlines → UI modules → app -->
   <script src="js/utils.js"></script>
   <script src="js/storage.js"></script>

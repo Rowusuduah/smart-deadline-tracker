@@ -253,9 +253,6 @@ main {
 .dc-title-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .dc-title { font-weight: 700; font-size: .9rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-meta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.dc-effort { font-size: 11px; color: var(--muted); margin: 4px 0; display: flex; gap: 8px; }
-.effort-label { }
-.effort-value { font-weight: 700; }
 .dc-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
 .start-msg { font-size: 10px; font-weight: 600; }
 .start-msg.behind     { color: var(--red); }
