@@ -16,7 +16,7 @@ window.addEventListener('unhandledrejection', e => {
 // ─── Auth ─────────────────────────────────────────────────────────
 const AUTH_KEY      = 'sdt_auth';
 // SHA-256 of the password — never store the plain password
-const PASS_HASH     = '5ca76076e7f833fca479d10257f1773ca25f810f99b17c62ca6a3a0bf07de9f8';
+const PASS_HASH     = 'c62ededa6c50ed85cb4308545bd027bf6c72141f82e6c54e8a2dc89651ac82e0';
 
 async function hashPassword(password) {
   const msgBuffer  = new TextEncoder().encode(password);
