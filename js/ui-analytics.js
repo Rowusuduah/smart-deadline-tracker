@@ -19,7 +19,6 @@ function renderAnalytics() {
   renderCompletionTrendChart(deadlines, period);
   renderCategoryAnalysis(deadlines, settings);
   renderProcrastinationInsights(deadlines);
-  renderEffortAccuracy(deadlines);
 }
 
 // ─── Analytics KPIs ─────────────────────────────────────────────
@@ -161,12 +160,6 @@ function renderProcrastinationInsights(deadlines) {
     insights.overdueRate > 30 ? 'Many deadlines are completed late' : 'Within acceptable range'
   ));
 
-  rows.push(insightRow('Effort Underestimation Rate',
-    insights.underestimateRate !== null ? `${insights.underestimateRate}%` : '—',
-    insights.underestimateRate > 40 ? 'red' : insights.underestimateRate > 20 ? 'gold' : 'green',
-    insights.underestimateRate > 40 ? 'You frequently underestimate effort' : 'Good estimation'
-  ));
-
   // Most overdue category
   const catOverdue = insights.catOverdue;
   const catTotal   = insights.catTotal;
@@ -200,36 +193,3 @@ function insightRow(label, value, color, sub) {
   </div>`;
 }
 
-// ─── Effort Accuracy ────────────────────────────────────────────
-function renderEffortAccuracy(deadlines) {
-  const el = document.getElementById('analytics-effort');
-  if (!el) return;
-
-  const withBoth = deadlines.filter(d =>
-    d.status === 'completed' && d.estimatedHours > 0 && d.actualHours > 0
-  );
-
-  if (!withBoth.length) {
-    el.innerHTML = '<p class="text-muted" style="font-size:.85rem">Track actual hours on completed deadlines to see effort accuracy.</p>';
-    return;
-  }
-
-  const totalEst    = withBoth.reduce((s, d) => s + d.estimatedHours, 0);
-  const totalActual = withBoth.reduce((s, d) => s + d.actualHours, 0);
-  const avgRatio    = round(totalActual / totalEst, 2);
-  const pct         = Math.min(200, Math.round(avgRatio * 100));
-  const color       = pct > 150 ? 'var(--red)' : pct > 110 ? 'var(--gold)' : 'var(--green)';
-
-  el.innerHTML = `
-    <div class="effort-summary">
-      <div>Estimated total: <strong>${formatHours(totalEst)}</strong></div>
-      <div>Actual total: <strong style="color:${color}">${formatHours(totalActual)}</strong></div>
-      <div>Accuracy ratio: <strong style="color:${color}">${avgRatio}× estimated</strong>
-        ${avgRatio > 1.2 ? ' (underestimating)' : avgRatio < 0.8 ? ' (overestimating)' : ' (accurate)'}
-      </div>
-    </div>
-    <div class="workload-bar-wrap" style="margin-top:8px">
-      <div class="workload-bar" style="width:${Math.min(100, pct/2)}%;background:${color}"></div>
-    </div>
-  `;
-}

@@ -411,14 +411,6 @@ function buildModalForm(id) {
         <select id="modal-status">${statusOptions}</select>
       </div>
       <div class="form-group">
-        <label for="modal-est-hours">Estimated Hours</label>
-        <input type="number" id="modal-est-hours" value="${d.estimatedHours ?? ''}" min="0" max="10000" step="0.5" placeholder="e.g. 4">
-      </div>
-      <div class="form-group">
-        <label for="modal-actual-hours">Actual Hours</label>
-        <input type="number" id="modal-actual-hours" value="${d.actualHours ?? ''}" min="0" max="10000" step="0.5" placeholder="Track spent time">
-      </div>
-      <div class="form-group">
         <label for="modal-progress">Progress % (manual)</label>
         <input type="range" id="modal-progress" min="0" max="100" step="5" value="${d.progressPercent ?? 0}">
         <span id="modal-progress-val" style="font-size:11px;color:var(--muted)">${d.progressPercent ?? 0}%</span>
@@ -543,8 +535,6 @@ function saveModalForm() {
     category:       document.getElementById('modal-category')?.value || 'personal',
     priority:       document.getElementById('modal-priority')?.value || 'medium',
     status:         document.getElementById('modal-status')?.value || 'not-started',
-    estimatedHours: safeNum(document.getElementById('modal-est-hours')?.value, 0),
-    actualHours:    safeNum(document.getElementById('modal-actual-hours')?.value, 0),
     progressPercent: safeNum(document.getElementById('modal-progress')?.value, 0),
     tags,
     link:           document.getElementById('modal-link')?.value || '',
@@ -631,20 +621,15 @@ function renderDetailPanel(id) {
     <div class="detail-section">
       <div class="detail-row"><span class="detail-lbl">Due Date</span><span>${formatDate(d.dueDate)}${d.dueTime ? ' · ' + formatTime(d.dueTime) : ''}</span></div>
       <div class="detail-row"><span class="detail-lbl">Days Left</span><span style="color:${color}">${formatRelativeDeadline(d._daysLeft)}</span></div>
-      ${d.estimatedHours > 0 ? `
-      <div class="detail-row"><span class="detail-lbl">Estimated</span><span>${formatHours(d.estimatedHours)}</span></div>
-      <div class="detail-row"><span class="detail-lbl">Remaining</span><span>${formatHours(d._remainingHours)}</span></div>
-      ` : ''}
       <div class="detail-row"><span class="detail-lbl">Start By</span><span style="color:${d._startStatus === 'behind' ? 'var(--red)' : d._startStatus === 'start-today' ? 'var(--orange)' : 'var(--green)'}">${formatDate(d._recStartDate)}</span></div>
     </div>
 
-    ${d.estimatedHours > 0 ? `
     <div class="detail-section">
       <div class="detail-lbl" style="margin-bottom:6px">Progress — ${progress}%</div>
       <div class="progress-wrap">
         <div class="progress-bar" style="width:${progress}%;background:${color}"></div>
       </div>
-    </div>` : ''}
+    </div>
 
     ${d.subtasks && d.subtasks.length > 0 ? `
     <div class="detail-section">

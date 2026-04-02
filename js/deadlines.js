@@ -20,8 +20,6 @@ function defaultDeadline() {
     completedAt:    null,
     status:         'not-started',
     priority:       s.defaultPriority || 'medium',
-    estimatedHours: s.defaultEstimatedHours || 2,
-    actualHours:    0,
     progressPercent: 0,
     subtasks:       [],
     notes:          '',
@@ -42,9 +40,6 @@ function validateDeadline(data) {
   const errors = [];
   if (!data.title || !data.title.trim()) errors.push('Title is required.');
   if (!data.dueDate) errors.push('Due date is required.');
-  if (data.estimatedHours != null && safeNum(data.estimatedHours, 0) < 0) {
-    errors.push('Estimated hours cannot be negative.');
-  }
   if (data.progressPercent != null) {
     const p = safeNum(data.progressPercent, 0);
     if (p < 0 || p > 100) errors.push('Progress must be between 0 and 100.');
@@ -121,7 +116,6 @@ function duplicateDeadline(id) {
     title:          original.title + ' (copy)',
     status:         'not-started',
     progressPercent: 0,
-    actualHours:    0,
     completedAt:    null,
     createdAt:      nowISO(),
     updatedAt:      nowISO(),
@@ -238,8 +232,6 @@ function sanitizeDeadlineInput(data) {
   if (out.description)    out.description    = String(out.description).trim().slice(0, 2000);
   if (out.notes)          out.notes          = String(out.notes).trim().slice(0, 5000);
   if (out.link)           out.link           = String(out.link).trim().slice(0, 500);
-  if (out.estimatedHours != null) out.estimatedHours = Math.max(0, safeNum(out.estimatedHours, 0));
-  if (out.actualHours    != null) out.actualHours    = Math.max(0, safeNum(out.actualHours, 0));
   if (out.progressPercent != null) out.progressPercent = clamp(Math.round(safeNum(out.progressPercent, 0)), 0, 100);
   if (out.postponeCount  != null) out.postponeCount  = Math.max(0, safeNum(out.postponeCount, 0));
   if (!Array.isArray(out.tags)) out.tags = [];
@@ -302,7 +294,6 @@ function generateNextRecurrence(deadline) {
     dueDate:        nextDate,
     status:         'not-started',
     progressPercent: 0,
-    actualHours:    0,
     completedAt:    null,
     createdAt:      nowISO(),
     updatedAt:      nowISO(),

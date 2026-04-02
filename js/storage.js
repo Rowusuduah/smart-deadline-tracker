@@ -36,12 +36,10 @@ const DEFAULT_CATEGORIES = [
 const DEFAULT_SETTINGS = {
   theme:                'dark',
   dateFormat:           'MMM DD YYYY',
-  workHoursPerDay:      6,
   includeWeekends:      false,
   bufferDays:           1,
   defaultCategory:      'personal',
   defaultPriority:      'medium',
-  defaultEstimatedHours: 2,
   colorMode:            'urgency',   // 'urgency' | 'category'
   showCompletedDays:    7,            // show completed items for N days
   notificationsEnabled: false,
@@ -140,7 +138,7 @@ function exportCSV() {
   const deadlines = loadDeadlines();
   if (!deadlines.length) { alert('No deadlines to export.'); return; }
   const headers = ['Title','Category','Status','Priority','Due Date','Due Time',
-                   'Estimated Hours','Progress %','Notes','Tags','Created'];
+                   'Progress %','Notes','Tags','Created'];
   const rows = deadlines.map(d => [
     csvField(d.title),
     csvField(d.category),
@@ -148,7 +146,6 @@ function exportCSV() {
     csvField(d.priority),
     csvField(d.dueDate),
     csvField(d.dueTime || ''),
-    csvField(d.estimatedHours || 0),
     csvField(d.progressPercent || 0),
     csvField(d.notes || ''),
     csvField((d.tags || []).join(', ')),

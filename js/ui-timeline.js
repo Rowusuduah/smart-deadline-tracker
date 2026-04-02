@@ -164,13 +164,9 @@ function timelineCard(d, isOverdueSection) {
         <span class="tl-due-date" style="color:${color}">${formatDate(d.dueDate)}${d.dueTime ? ' · ' + formatTime(d.dueTime) : ''}</span>
         <span class="tl-relative" style="color:${isOverdueSection ? 'var(--red)' : color}">${daysLabel}</span>
       </div>
-      ${d.estimatedHours > 0 ? `
-      <div class="tl-effort">
-        <span>${formatHours(d._remainingHours)} remaining</span>
-      </div>
       <div class="progress-wrap" style="margin-top:4px">
         <div class="progress-bar" style="width:${prog}%;background:${color}"></div>
-      </div>` : ''}
+      </div>
     </div>
     <div class="tl-card-actions">
       <button class="icon-btn sm" data-action="view"     data-id="${escapeHTML(d.id)}" title="View">↗</button>

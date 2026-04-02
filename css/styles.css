@@ -284,14 +284,6 @@ main {
 .risk-badge-critical { background: rgba(248,113,113,.18); color: var(--red); }
 .risk-badge-warning  { background: rgba(251,191,36,.15); color: var(--gold); }
 
-/* Workload bar */
-.workload-row { display: flex; align-items: center; gap: 10px; }
-.workload-label { font-size: .78rem; color: var(--muted); width: 70px; flex-shrink: 0; }
-.workload-bar-wrap { flex: 1; height: 10px; background: var(--surf3); border-radius: 5px; overflow: hidden; }
-.workload-bar { height: 100%; border-radius: 5px; transition: width .4s ease; }
-.workload-val { font-size: .82rem; font-weight: 700; width: 50px; text-align: right; flex-shrink: 0; }
-.workload-warning { font-size: .8rem; color: var(--gold); margin-top: 8px; }
-
 /* Category load */
 .cat-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
 .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }

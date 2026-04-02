@@ -13,11 +13,9 @@ function renderSettingsTab() {
 // ─── Settings Form ───────────────────────────────────────────────
 function populateSettingsForm() {
   const s = loadSettings();
-  setVal('set-work-hours',    s.workHoursPerDay);
   setVal('set-buffer-days',   s.bufferDays);
   setVal('set-def-category',  s.defaultCategory);
   setVal('set-def-priority',  s.defaultPriority);
-  setVal('set-def-est-hours', s.defaultEstimatedHours);
   setVal('set-color-mode',    s.colorMode);
   setVal('set-completed-days',s.showCompletedDays);
   setCheck('set-include-weekends', s.includeWeekends);
@@ -35,11 +33,9 @@ function setCheck(id, v) {
 
 function saveSettingsForm() {
   const s = loadSettings();
-  s.workHoursPerDay       = clamp(safeNum(getVal('set-work-hours'), 6), 1, 24);
   s.bufferDays            = clamp(safeNum(getVal('set-buffer-days'), 1), 0, 14);
   s.defaultCategory       = getVal('set-def-category') || 'personal';
   s.defaultPriority       = getVal('set-def-priority') || 'medium';
-  s.defaultEstimatedHours = clamp(safeNum(getVal('set-def-est-hours'), 2), 0, 1000);
   s.colorMode             = getVal('set-color-mode') || 'urgency';
   s.showCompletedDays     = clamp(safeNum(getVal('set-completed-days'), 7), 0, 365);
   s.includeWeekends       = getCheck('set-include-weekends');

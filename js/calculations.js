@@ -81,49 +81,14 @@ function calcProgress(deadline) {
 }
 
 /**
- * Remaining effort hours = estimatedHours * (1 - progress/100).
- * Never negative. 0 if no estimate provided.
- * AUDITOR NOTE: guards against progress > 100 via safePercent.
- */
-function calcRemainingHours(deadline) {
-  const estimated = safeNum(deadline.estimatedHours, 0);
-  if (estimated <= 0) return 0;
-  const progress = calcProgress(deadline) / 100;
-  return Math.max(0, estimated * (1 - progress));
-}
-
-/**
- * Daily effort needed (hours/day) to finish before deadline.
- * Uses workdays if !includeWeekends, else calendar days.
- * AUDITOR NOTE: guards against division-by-zero when daysLeft = 0.
- */
-function calcDailyEffortNeeded(deadline, settings) {
-  const remaining = calcRemainingHours(deadline);
-  if (remaining <= 0) return 0;
-  const wph = settings ? safeNum(settings.workHoursPerDay, 6) : 6;
-  const daysLeft = calcWorkdaysLeft(deadline, settings);
-  if (daysLeft <= 0) {
-    // Overdue or due today — caller must handle "already past"
-    return remaining; // all remaining effort is needed now
-  }
-  return round(remaining / daysLeft, 2);
-}
-
-/**
  * Recommended start date (ISO string).
- * = dueDate − ceil(estimatedHours / workHoursPerDay) − bufferDays
- * AUDITOR NOTE: result is clamped so it never precedes createdAt.
- *               If recommended date is in the past, returns todayISO().
+ * = dueDate − bufferDays
+ * If recommended date is in the past, returns todayISO().
  */
 function calcRecommendedStartDate(deadline, settings) {
-  const estimated = safeNum(deadline.estimatedHours, 0);
-  if (estimated <= 0 || !deadline.dueDate) return todayISO();
-  const wph       = settings ? safeNum(settings.workHoursPerDay, 6) : 6;
+  if (!deadline.dueDate) return todayISO();
   const buffer    = settings ? safeNum(settings.bufferDays, 1) : 1;
-  const daysNeeded = Math.ceil(estimated / (wph || 6));
-  const totalDays  = daysNeeded + buffer;
-  const startISO   = subtractDays(deadline.dueDate, totalDays);
-  // Never recommend a start date before today
+  const startISO  = subtractDays(deadline.dueDate, buffer);
   return startISO < todayISO() ? todayISO() : startISO;
 }
 
@@ -180,10 +145,6 @@ function calcUrgencyScore(deadline, settings) {
   if (pw === 4) adj += 15;
   else if (pw === 3) adj += 8;
 
-  const wph = settings ? safeNum(settings.workHoursPerDay, 6) : 6;
-  const dailyEffort = calcDailyEffortNeeded(deadline, settings);
-  if (deadline.estimatedHours > 0 && dailyEffort > wph) adj += 12;
-
   const progress = calcProgress(deadline);
   if (progress === 0 && daysLeft >= 0 && daysLeft <= 7) adj += 10;
 
@@ -195,36 +156,18 @@ function calcUrgencyScore(deadline, settings) {
 
 /**
  * Risk level: 'safe' | 'warning' | 'critical'
- *
- * Algorithm:
- *   critical if:
- *     - overdue and not completed
- *     - dailyEffortNeeded > workHoursPerDay * 1.5
- *     - daysLeft ≤ 1 and progress < 50
- *   warning if:
- *     - dailyEffortNeeded > workHoursPerDay * 0.75
- *     - daysLeft ≤ 3 and progress < 30
- *     - daysLeft ≤ 7 and progress = 0 and estimatedHours > 0
- *     - postponeCount ≥ 2
- *   safe otherwise
- *
- * AUDITOR NOTE: Uses workdays as denominator for dailyEffortNeeded.
  */
 function calcRiskLevel(deadline, settings) {
   if (['completed', 'canceled', 'archived', 'paused'].includes(deadline.status)) return 'safe';
   const daysLeft    = calcDaysLeft(deadline);
   const progress    = calcProgress(deadline);
-  const wph         = settings ? safeNum(settings.workHoursPerDay, 6) : 6;
-  const dailyEffort = calcDailyEffortNeeded(deadline, settings);
   const postponed   = safeNum(deadline.postponeCount, 0);
 
   if (daysLeft < 0 && progress < 100) return 'critical';
-  if (deadline.estimatedHours > 0 && dailyEffort > wph * 1.5) return 'critical';
   if (daysLeft <= 1 && progress < 50) return 'critical';
 
-  if (deadline.estimatedHours > 0 && dailyEffort > wph * 0.75) return 'warning';
   if (daysLeft <= 3 && progress < 30) return 'warning';
-  if (daysLeft <= 7 && progress === 0 && deadline.estimatedHours > 0) return 'warning';
+  if (daysLeft <= 7 && progress === 0) return 'warning';
   if (postponed >= 2) return 'warning';
 
   return 'safe';
@@ -275,9 +218,7 @@ function enrichDeadline(deadline, settings) {
   const daysLeft        = calcDaysLeft(deadline);
   const msRemaining     = calcMsRemaining(deadline);
   const progress        = calcProgress(deadline);
-  const remainingHours  = calcRemainingHours(deadline);
   const workdaysLeft    = calcWorkdaysLeft(deadline, settings);
-  const dailyEffort     = calcDailyEffortNeeded(deadline, settings);
   const urgencyScore    = calcUrgencyScore(deadline, settings);
   const riskLevel       = calcRiskLevel(deadline, settings);
   const healthStatus    = calcHealthStatus(deadline, settings);
@@ -288,13 +229,10 @@ function enrichDeadline(deadline, settings) {
 
   return {
     ...deadline,
-    // computed — prefixed with _ to distinguish from stored fields
     _daysLeft:         daysLeft,
     _msRemaining:      msRemaining,
     _progress:         progress,
-    _remainingHours:   remainingHours,
     _workdaysLeft:     workdaysLeft,
-    _dailyEffort:      dailyEffort,
     _urgencyScore:     urgencyScore,
     _riskLevel:        riskLevel,
     _healthStatus:     healthStatus,
@@ -331,13 +269,6 @@ function getDashboardStats(deadlines, settings) {
     .sort((a, b) => b._urgencyScore - a._urgencyScore)
     .slice(0, 5);
 
-  // Workload today: sum daily effort of all active non-complete items
-  const workloadToday = notComplete.reduce((sum, d) => sum + safeNum(d._dailyEffort, 0), 0);
-
-  // Workload this week: sum remaining hours of items due within 7 days
-  const workloadWeek = [...overdue, ...dueToday, ...dueThisWeek]
-    .reduce((sum, d) => sum + safeNum(d._remainingHours, 0), 0);
-
   // Category distribution
   const catMap = {};
   active.forEach(d => {
@@ -358,8 +289,6 @@ function getDashboardStats(deadlines, settings) {
     dueMonthCount: dueThisMonth.length,
     completedCount: completed.length,
     atRiskCount:   atRisk.length,
-    workloadToday: round(workloadToday, 1),
-    workloadWeek:  round(workloadWeek, 1),
     onTimeRate,
     topUrgent,
     overdue,
@@ -429,7 +358,7 @@ function getCompletionTrend(deadlines, daysBack = 30) {
 
 /**
  * Procrastination indicators.
- * Returns { avgPostponeCount, lateStartRate, underestimateRate, neglectedCategories }
+ * Returns { avgPostponeCount, overdueRate, neglectedCategories }
  */
 function getProcrastinationInsights(deadlines) {
   const completed = deadlines.filter(d => d.status === 'completed');
@@ -437,13 +366,6 @@ function getProcrastinationInsights(deadlines) {
   const avgPostponeCount = deadlines.length > 0
     ? round(totalPostpones / deadlines.length, 1)
     : 0;
-
-  // Late start rate: % of deadlines where actual hours > estimated * 1.5
-  const withBothHours = completed.filter(d => d.estimatedHours > 0 && d.actualHours > 0);
-  const underestimates = withBothHours.filter(d => d.actualHours > d.estimatedHours * 1.5).length;
-  const underestimateRate = withBothHours.length > 0
-    ? Math.round((underestimates / withBothHours.length) * 100)
-    : null;
 
   // Overdue rate
   const overdueCount = deadlines.filter(d =>
@@ -466,7 +388,6 @@ function getProcrastinationInsights(deadlines) {
 
   return {
     avgPostponeCount,
-    underestimateRate,
     overdueRate,
     catOverdue,
     catTotal,

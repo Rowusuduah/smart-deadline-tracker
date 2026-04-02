@@ -14,7 +14,6 @@ function renderDashboard() {
   renderDashboardKPIs(stats);
   renderDashboardUrgentPanel(stats);
   renderDashboardAtRisk(stats);
-  renderDashboardWorkload(stats, settings);
   renderDashboardCategoryLoad(stats);
   renderDashboardDueToday(stats);
 }
@@ -75,7 +74,7 @@ function urgentCard(d) {
         <span class="cat-badge">${catLabel}</span>
       </div>
     </div>
-    ${d.estimatedHours > 0 ? progressBar(d._progress, color) : ''}
+    ${progressBar(d._progress, color)}
     <div class="dc-footer">
       <span class="start-msg ${d._startStatus}">${escapeHTML(startMsg)}</span>
       <div class="dc-actions">
@@ -107,41 +106,6 @@ function renderDashboardAtRisk(stats) {
         <span class="risk-badge risk-badge-${risk}">${risk}</span>
       </div>`;
     }).join('') + '</div>';
-}
-
-// ─── Workload Panel ──────────────────────────────────────────────
-function renderDashboardWorkload(stats, settings) {
-  const el = document.getElementById('dash-workload');
-  if (!el) return;
-
-  const wph         = safeNum(settings.workHoursPerDay, 6);
-  const todayLoad   = stats.workloadToday;
-  const weekLoad    = stats.workloadWeek;
-  const todayPct    = Math.min(100, Math.round((todayLoad / wph) * 100));
-  const weekHours   = wph * 5;
-  const weekPct     = Math.min(100, Math.round((weekLoad / weekHours) * 100));
-  const todayColor  = todayPct >= 100 ? 'var(--red)' : todayPct >= 75 ? 'var(--orange)' : 'var(--green)';
-  const weekColor   = weekPct  >= 100 ? 'var(--red)' : weekPct  >= 75 ? 'var(--orange)' : 'var(--blue)';
-
-  el.innerHTML = `
-    <div class="workload-row">
-      <div class="workload-label">Today</div>
-      <div class="workload-bar-wrap">
-        <div class="workload-bar" style="width:${todayPct}%;background:${todayColor}"></div>
-      </div>
-      <div class="workload-val" style="color:${todayColor}">${formatHours(todayLoad)}</div>
-    </div>
-    <div class="workload-row" style="margin-top:10px">
-      <div class="workload-label">This Week</div>
-      <div class="workload-bar-wrap">
-        <div class="workload-bar" style="width:${weekPct}%;background:${weekColor}"></div>
-      </div>
-      <div class="workload-val" style="color:${weekColor}">${formatHours(weekLoad)}</div>
-    </div>
-    ${todayPct >= 100
-      ? '<p class="workload-warning">⚠ Today is overloaded — consider deferring a task.</p>'
-      : ''}
-  `;
 }
 
 // ─── Category Distribution ───────────────────────────────────────

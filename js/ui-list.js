@@ -124,13 +124,9 @@ function detailedRow(d) {
         <div class="detailed-relative">${formatRelativeDeadline(d._daysLeft)}</div>
       </div>
     </div>
-    ${d.estimatedHours > 0 ? `
-    <div class="detailed-effort">
-      <span>Effort: ${formatHours(d._remainingHours)} remaining</span>
-    </div>
     <div class="progress-wrap" style="margin:4px 0">
       <div class="progress-bar" style="width:${prog}%;background:${color}"></div>
-    </div>` : ''}
+    </div>
     <div class="detailed-actions">
       <button class="btn btn-ghost btn-sm" data-action="view"      data-id="${escapeHTML(d.id)}">View</button>
       <button class="btn btn-ghost btn-sm" data-action="edit"      data-id="${escapeHTML(d.id)}">Edit</button>

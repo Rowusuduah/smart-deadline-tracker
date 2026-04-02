@@ -107,11 +107,6 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Workload</div>
-            <div id="dash-workload" aria-live="polite"></div>
-          </div>
-
-          <div class="card">
             <div class="card-title">Category Load</div>
             <div id="dash-cat-load" aria-live="polite"></div>
           </div>
@@ -234,12 +229,6 @@
       <!-- Nudges -->
       <div id="focus-nudge" aria-live="polite" style="margin-bottom:12px"></div>
 
-      <!-- Workload bar -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-title">Today's Workload</div>
-        <div id="focus-workload"></div>
-      </div>
-
       <!-- Top 3 -->
       <div class="card" style="margin-bottom:14px">
         <div class="card-title">Top Priority Actions</div>
@@ -278,10 +267,6 @@
           <div class="card-title">Completion Trend</div>
           <div id="analytics-trend-chart"></div>
         </div>
-        <div class="card">
-          <div class="card-title">Effort Accuracy</div>
-          <div id="analytics-effort"></div>
-        </div>
       </div>
 
       <div class="card">
@@ -305,10 +290,6 @@
         <div class="card-title">Planning Assumptions</div>
         <div class="form-grid">
           <div class="form-group">
-            <label for="set-work-hours">Work Hours per Day</label>
-            <input type="number" id="set-work-hours" min="1" max="24" step="0.5" placeholder="6">
-          </div>
-          <div class="form-group">
             <label for="set-buffer-days">Buffer Days (before due)</label>
             <input type="number" id="set-buffer-days" min="0" max="14" step="1" placeholder="1">
           </div>
@@ -324,10 +305,6 @@
               <option value="medium" selected>Medium</option>
               <option value="low">Low</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="set-def-est-hours">Default Estimated Hours</label>
-            <input type="number" id="set-def-est-hours" min="0" max="1000" step="0.5" placeholder="2">
           </div>
           <div class="form-group">
             <label for="set-completed-days">Show Completed For (days)</label>
