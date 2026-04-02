@@ -77,7 +77,7 @@ function calcProgress(deadline) {
     const doneCount = subtasks.filter(s => s.done).length;
     return safePercent((doneCount / subtasks.length) * 100);
   }
-  return safePercent(deadline.progressPercent || 0);
+  return safePercent(deadline.progressPercent ?? 0);
 }
 
 /**

@@ -5,6 +5,14 @@
                and all ui-*.js modules.
 ═══════════════════════════════════════════════════════════════ */
 
+// ─── Global Error Handlers ──────────────────────────────────────────
+window.onerror = (msg, src, line, col, err) => {
+  console.error('[SDT] Uncaught error:', msg, 'at', src, line, col, err);
+};
+window.addEventListener('unhandledrejection', e => {
+  console.error('[SDT] Unhandled rejection:', e.reason);
+});
+
 // ─── Auth ─────────────────────────────────────────────────────────
 const AUTH_KEY      = 'sdt_auth';
 // SHA-256 of the password — never store the plain password
@@ -48,6 +56,12 @@ function lockApp() {
   showLoginGate();
 }
 
+// Rate-limiting (sessionStorage so it resets when the tab closes)
+let _loginAttempts     = parseInt(sessionStorage.getItem('sdt_login_attempts') || '0', 10);
+let _loginLockoutUntil = parseInt(sessionStorage.getItem('sdt_login_lockout') || '0', 10);
+const LOGIN_MAX_ATTEMPTS  = 5;
+const LOGIN_BASE_DELAY_MS = 1000;
+
 async function handleLogin(e) {
   e.preventDefault();
   const input    = document.getElementById('login-password');
@@ -60,19 +74,39 @@ async function handleLogin(e) {
     return;
   }
 
+  // Rate-limit check
+  const now = Date.now();
+  if (_loginLockoutUntil && now < _loginLockoutUntil) {
+    const secs = Math.ceil((_loginLockoutUntil - now) / 1000);
+    if (errorEl) errorEl.textContent = `Too many attempts. Try again in ${secs}s.`;
+    return;
+  }
+
   btn.textContent = 'Checking…';
   btn.disabled    = true;
 
   const hash = await hashPassword(password);
 
   if (hash === PASS_HASH) {
+    _loginAttempts = 0;
+    sessionStorage.removeItem('sdt_login_attempts');
+    sessionStorage.removeItem('sdt_login_lockout');
     setAuthenticated(true);
     if (errorEl) errorEl.textContent = '';
     showApp();
     initApp();
   } else {
-    if (errorEl) errorEl.textContent = 'Incorrect password. Try again.';
-    if (input)   { input.value = ''; input.focus(); }
+    _loginAttempts++;
+    sessionStorage.setItem('sdt_login_attempts', String(_loginAttempts));
+    if (_loginAttempts >= LOGIN_MAX_ATTEMPTS) {
+      const delay = Math.min(LOGIN_BASE_DELAY_MS * Math.pow(2, _loginAttempts - LOGIN_MAX_ATTEMPTS), 60000);
+      _loginLockoutUntil = now + delay;
+      sessionStorage.setItem('sdt_login_lockout', String(_loginLockoutUntil));
+      if (errorEl) errorEl.textContent = `Too many attempts. Locked for ${Math.ceil(delay / 1000)}s.`;
+    } else {
+      if (errorEl) errorEl.textContent = 'Incorrect password. Try again.';
+    }
+    if (input) { input.value = ''; input.focus(); }
   }
 
   btn.textContent = 'Unlock';
@@ -185,6 +219,7 @@ function loadFromDrive() {
       if (!parsed.data || typeof parsed.data !== 'object') throw new Error('Invalid backup');
       const valid = Object.keys(parsed.data).filter(k => BACKUP_KEYS.includes(k));
       if (!valid.length) throw new Error('No data');
+      _validateRestoreData(valid, parsed);
       if (!confirm(`Load backup from Drive?\n\nThis will replace all current data.`)) { _gSetStatus(''); return; }
       valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
       localStorage.setItem(KEY_GDRIVE_CONNECTED, '1');
@@ -377,16 +412,16 @@ function buildModalForm(id) {
       </div>
       <div class="form-group">
         <label for="modal-est-hours">Estimated Hours</label>
-        <input type="number" id="modal-est-hours" value="${d.estimatedHours || ''}" min="0" max="10000" step="0.5" placeholder="e.g. 4">
+        <input type="number" id="modal-est-hours" value="${d.estimatedHours ?? ''}" min="0" max="10000" step="0.5" placeholder="e.g. 4">
       </div>
       <div class="form-group">
         <label for="modal-actual-hours">Actual Hours</label>
-        <input type="number" id="modal-actual-hours" value="${d.actualHours || ''}" min="0" max="10000" step="0.5" placeholder="Track spent time">
+        <input type="number" id="modal-actual-hours" value="${d.actualHours ?? ''}" min="0" max="10000" step="0.5" placeholder="Track spent time">
       </div>
       <div class="form-group">
         <label for="modal-progress">Progress % (manual)</label>
-        <input type="range" id="modal-progress" min="0" max="100" step="5" value="${d.progressPercent || 0}" oninput="document.getElementById('modal-progress-val').textContent=this.value+'%'">
-        <span id="modal-progress-val" style="font-size:11px;color:var(--muted)">${d.progressPercent || 0}%</span>
+        <input type="range" id="modal-progress" min="0" max="100" step="5" value="${d.progressPercent ?? 0}">
+        <span id="modal-progress-val" style="font-size:11px;color:var(--muted)">${d.progressPercent ?? 0}%</span>
       </div>
       <div class="form-group">
         <label for="modal-tags">Tags (comma separated)</label>
@@ -441,6 +476,15 @@ function buildModalForm(id) {
       </div>
     </div>
   `;
+
+  // Wire up progress slider (replaces removed inline oninput handler)
+  const progressSlider = document.getElementById('modal-progress');
+  const progressVal    = document.getElementById('modal-progress-val');
+  if (progressSlider && progressVal) {
+    progressSlider.addEventListener('input', () => {
+      progressVal.textContent = progressSlider.value + '%';
+    });
+  }
 
   const title = document.getElementById('modal-heading');
   if (title) title.textContent = isEditing ? 'Edit Deadline' : 'Add Deadline';

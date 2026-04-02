@@ -53,7 +53,7 @@ function _load(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
     if (raw === null) return fallback;
-    return JSON.parse(raw);
+    return JSON.parse(raw, (k, v) => k === '__proto__' ? undefined : v);
   } catch { return fallback; }
 }
 
@@ -63,6 +63,7 @@ function _save(key, value) {
     if (typeof queueDriveSync === 'function') queueDriveSync();
   } catch (e) {
     console.error('[storage] Save failed:', key, e);
+    if (e.name === 'QuotaExceededError') alert('Storage is full. Please export a backup and clear old data.');
   }
 }
 
@@ -80,7 +81,7 @@ function saveSettings(obj) { _save(STORAGE_KEYS.SETTINGS, obj); }
 // ─── Categories ──────────────────────────────────────────────────
 function loadCategories() {
   const stored = _load(STORAGE_KEYS.CATEGORIES, null);
-  if (!stored || !stored.length) return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  if (!stored || !stored.length) return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES), (k, v) => k === '__proto__' ? undefined : v);
   return stored;
 }
 function saveCategories(arr) { _save(STORAGE_KEYS.CATEGORIES, arr); }
@@ -100,15 +101,30 @@ function exportJSON() {
   downloadFile(payload, `DeadlineTracker_Backup_${todayISO()}.json`, 'application/json');
 }
 
+function _validateRestoreData(valid, parsed) {
+  const MAX_VALUE_SIZE = 1024 * 1024; // 1MB per key
+  valid.forEach(k => {
+    const v = parsed.data[k];
+    if (typeof v !== 'string') throw new Error(`Invalid value for key "${k}" — expected string.`);
+    if (v.length > MAX_VALUE_SIZE) throw new Error(`Value for "${k}" exceeds 1MB limit.`);
+    if (k !== STORAGE_KEYS.THEME) {
+      JSON.parse(v, (key, val) => key === '__proto__' ? undefined : val);
+    }
+  });
+}
+
 function importJSON(file, onSuccess) {
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('Backup file too large (max 10MB).'); return; }
   const reader = new FileReader();
+  reader.onerror = () => alert('Failed to read backup file.');
   reader.onload = e => {
     try {
-      const parsed = JSON.parse(e.target.result);
+      const parsed = JSON.parse(e.target.result, (k, v) => k === '__proto__' ? undefined : v);
       if (!parsed.data || typeof parsed.data !== 'object') throw new Error('Invalid backup format — missing data object.');
       const valid = Object.keys(parsed.data).filter(k => BACKUP_KEYS.includes(k));
       if (!valid.length) throw new Error('No recognisable data found in this file.');
+      _validateRestoreData(valid, parsed);
       const exportedDate = parsed._exported ? new Date(parsed._exported).toLocaleString() : 'unknown date';
       if (!confirm(`Restore backup from ${exportedDate}?\n\nThis will replace all current data on this device.`)) return;
       valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
