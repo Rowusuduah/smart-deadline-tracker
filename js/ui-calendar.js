@@ -28,7 +28,9 @@ function renderCalendarGrid() {
 
   const firstDay   = getFirstDayOfMonth(year, month);
   const daysInMon  = getDaysInMonth(year, month);
-  const daysInPrev = getDaysInMonth(year, month - 1 < 0 ? 11 : month - 1);
+  const prevMonth  = month - 1 < 0 ? 11 : month - 1;
+  const prevYear   = month - 1 < 0 ? year - 1 : year;
+  const daysInPrev = getDaysInMonth(prevYear, prevMonth);
 
   // Day name headers
   let html = DAY_ABBR.map(d => `<div class="cal-day-name">${d}</div>`).join('');
@@ -47,7 +49,7 @@ function renderCalendarGrid() {
       d.dueDate === dateISO && !['archived','canceled'].includes(d.status)
     );
     const dots = dayItems.slice(0, 4).map(d =>
-      `<span class="cal-dot" style="background:${d._urgencyColor}" title="${escapeHTML(d.title)}"></span>`
+      `<span class="cal-dot" style="background:${safeColor(d._urgencyColor)}" title="${escapeHTML(d.title)}"></span>`
     ).join('');
     const overflow = dayItems.length > 4 ? `<span class="cal-overflow">+${dayItems.length - 4}</span>` : '';
     const hasOverdue = dayItems.some(d => d._isOverdue);
@@ -55,7 +57,7 @@ function renderCalendarGrid() {
       <span class="cal-day-num ${isToday ? 'today-num' : ''}">${day}</span>
       <div class="cal-items">
         ${dayItems.slice(0, 3).map(d =>
-          `<div class="cal-item" data-id="${escapeHTML(d.id)}" style="border-left:2px solid ${d._urgencyColor}" title="${escapeHTML(d.title)}">
+          `<div class="cal-item" data-id="${escapeHTML(d.id)}" style="border-left:2px solid ${safeColor(d._urgencyColor)}" title="${escapeHTML(d.title)}">
             ${escapeHTML(truncate(d.title, 22))}
           </div>`
         ).join('')}
@@ -122,7 +124,7 @@ function renderCalendarDayPopup(dateISO) {
     </div>`;
   } else {
     const items = deadlines.map(d => `
-      <div class="popup-item" data-id="${escapeHTML(d.id)}" style="border-left:3px solid ${d._urgencyColor}">
+      <div class="popup-item" data-id="${escapeHTML(d.id)}" style="border-left:3px solid ${safeColor(d._urgencyColor)}">
         <div class="popup-item-title">${escapeHTML(d.title)}</div>
         <div class="popup-item-meta">
           ${escapeHTML(d.category || '')} · ${statusBadge(d.status, d._isOverdue)}

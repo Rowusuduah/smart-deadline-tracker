@@ -64,7 +64,7 @@ function groupSection(title, items, viewMode) {
 
 // ─── Compact Row ─────────────────────────────────────────────────
 function compactRow(d) {
-  const color   = d._urgencyColor;
+  const color   = safeColor(d._urgencyColor);
   const checked = AppState.list.selected.has(d.id);
   return `<div class="list-row compact ${checked ? 'selected' : ''}" data-id="${escapeHTML(d.id)}">
     <input type="checkbox" class="row-check" data-id="${escapeHTML(d.id)}" ${checked ? 'checked' : ''} aria-label="Select ${escapeHTML(d.title)}">
@@ -97,7 +97,7 @@ function compactRow(d) {
 
 // ─── Detailed Row ────────────────────────────────────────────────
 function detailedRow(d) {
-  const color   = d._urgencyColor;
+  const color   = safeColor(d._urgencyColor);
   const checked = AppState.list.selected.has(d.id);
   const prog    = d._progress;
   return `<div class="list-row detailed ${checked ? 'selected' : ''}" data-id="${escapeHTML(d.id)}" style="border-left:3px solid ${color}">

@@ -240,3 +240,19 @@ function truncate(s, maxLen = 60) {
   if (!s) return '';
   return s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
 }
+
+// ─── URL Safety ─────────────────────────────────────────────────
+function isSafeUrl(url) {
+  try {
+    const u = new URL(url, window.location.origin);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch { return false; }
+}
+
+// ─── Color Validation ───────────────────────────────────────────
+function isValidColor(c) {
+  return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c);
+}
+function safeColor(c, fallback) {
+  return isValidColor(c) ? c : (fallback || '#888888');
+}

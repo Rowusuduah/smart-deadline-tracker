@@ -54,7 +54,7 @@ function renderDashboardUrgentPanel(stats) {
 }
 
 function urgentCard(d) {
-  const color     = d._urgencyColor;
+  const color     = safeColor(d._urgencyColor);
   const daysLabel = formatRelativeDeadline(d._daysLeft);
   const riskBadge = riskBadgeHtml(d._riskLevel);
   const health    = healthDot(d._healthStatus);
@@ -121,12 +121,13 @@ function renderDashboardCategoryLoad(stats) {
 
   el.innerHTML = sorted.map(([catId, count]) => {
     const cat   = cats.find(c => c.id === catId) || { name: catId, color: 'var(--muted)' };
+    const catColor = safeColor(cat.color, 'var(--muted)');
     const pct   = Math.round((count / total) * 100);
     return `<div class="cat-row">
-      <span class="cat-dot" style="background:${cat.color}"></span>
+      <span class="cat-dot" style="background:${catColor}"></span>
       <span class="cat-name">${escapeHTML(cat.name)}</span>
       <div class="cat-bar-wrap">
-        <div class="cat-bar" style="width:${pct}%;background:${cat.color}44;border-right:2px solid ${cat.color}"></div>
+        <div class="cat-bar" style="width:${pct}%;background:${catColor}44;border-right:2px solid ${catColor}"></div>
       </div>
       <span class="cat-count">${count}</span>
     </div>`;
@@ -144,7 +145,7 @@ function renderDashboardDueToday(stats) {
   }
   el.innerHTML = `<div class="due-today-list">` +
     list.map(d => {
-      const color = d._urgencyColor;
+      const color = safeColor(d._urgencyColor);
       return `<div class="due-row" data-id="${escapeHTML(d.id)}">
         <span class="due-dot" style="background:${color}"></span>
         <div class="due-info">

@@ -129,7 +129,7 @@ function renderCategoryAnalysis(deadlines, settings) {
       ${sorted.map(([catId, data]) => {
         const cat = cats.find(c => c.id === catId) || { name: catId, color: 'var(--muted)' };
         return `<tr>
-          <td><span class="cat-dot" style="background:${cat.color}"></span> ${escapeHTML(cat.name)}</td>
+          <td><span class="cat-dot" style="background:${safeColor(cat.color, 'var(--muted)')}"></span> ${escapeHTML(cat.name)}</td>
           <td>${data.total}</td>
           <td>${data.active}</td>
           <td style="color:var(--green)">${data.completed}</td>

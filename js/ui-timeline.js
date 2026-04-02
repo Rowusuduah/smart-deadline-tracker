@@ -112,9 +112,11 @@ function groupDeadlinesByMonth(deadlines) {
     const key = `${due.getFullYear()}-${due.getMonth()}`;
     if (!seen.has(key)) {
       let label;
+      const nextMonth = (today.getMonth() + 1) % 12;
+      const nextMonthYear = today.getMonth() === 11 ? today.getFullYear() + 1 : today.getFullYear();
       if (due.getFullYear() === today.getFullYear() && due.getMonth() === today.getMonth()) {
         label = 'This Month';
-      } else if (due.getFullYear() === today.getFullYear() && due.getMonth() === today.getMonth() + 1) {
+      } else if (due.getFullYear() === nextMonthYear && due.getMonth() === nextMonth) {
         label = 'Next Month';
       } else {
         label = `${MONTH_NAMES[due.getMonth()]} ${due.getFullYear()}`;
@@ -145,7 +147,7 @@ function isNextWeek(monday) {
 
 // ─── Timeline Card ───────────────────────────────────────────────
 function timelineCard(d, isOverdueSection) {
-  const color    = d._urgencyColor;
+  const color    = safeColor(d._urgencyColor);
   const daysLabel = formatRelativeDeadline(d._daysLeft);
   const prog     = d._progress;
 

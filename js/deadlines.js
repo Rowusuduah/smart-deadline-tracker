@@ -171,13 +171,13 @@ function postponeDeadline(id, newDueDate) {
 // ─── Bulk Status Changes ─────────────────────────────────────────
 function bulkMarkComplete(ids) {
   ids.forEach(id => {
-    try { markComplete(id); } catch {}
+    try { markComplete(id); } catch (e) { console.error('[deadlines] bulk op failed:', e); }
   });
 }
 
 function bulkArchive(ids) {
   ids.forEach(id => {
-    try { archiveDeadline(id); } catch {}
+    try { archiveDeadline(id); } catch (e) { console.error('[deadlines] bulk op failed:', e); }
   });
 }
 

@@ -594,7 +594,7 @@ function renderDetailPanel(id) {
   const d = getDeadlineById(id);
   if (!d) { body.innerHTML = '<p class="text-muted">Deadline not found.</p>'; return; }
 
-  const color    = d._urgencyColor;
+  const color    = safeColor(d._urgencyColor);
   const progress = d._progress;
 
   body.innerHTML = `
@@ -653,7 +653,7 @@ function renderDetailPanel(id) {
       <p style="margin-top:6px;font-size:.85rem;color:var(--muted);line-height:1.6">${escapeHTML(d.notes)}</p>
     </div>` : ''}
 
-    ${d.link ? `
+    ${d.link && isSafeUrl(d.link) ? `
     <div class="detail-section">
       <div class="detail-lbl">Link</div>
       <a href="${escapeHTML(d.link)}" target="_blank" rel="noopener noreferrer" class="detail-link">${escapeHTML(truncate(d.link, 60))}</a>
@@ -854,6 +854,7 @@ function bindEvents() {
     const action = actionEl.dataset.action;
     const id     = actionEl.dataset.id;
     const date   = actionEl.dataset.date;
+    if (action === 'switch-tab') { const tab = actionEl.dataset.tab; if (tab) switchTab(tab); return; }
     if (action === 'quick-add') { handleAction('quick-add', null, date); return; }
     if (id) handleAction(action, id);
   });

@@ -37,7 +37,7 @@ function renderFocusTop3(items, settings) {
 }
 
 function focusCard(d, rank, settings) {
-  const color      = d._urgencyColor;
+  const color      = safeColor(d._urgencyColor);
   const daysLabel  = formatRelativeDeadline(d._daysLeft);
   const startMsg   = startStatusMessage(d._startStatus);
   const prog       = d._progress;

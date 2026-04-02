@@ -123,10 +123,8 @@ function calcStartStatus(deadline, settings) {
  * Adjustments (applied after base, then clamped 0–100):
  *   priority=critical → +15
  *   priority=high     → +8
- *   effort unrealistic (dailyEffort > workHours) → +12
  *   progress=0 and daysLeft≤7 → +10
  *   postponed ≥ 2 times → +8
- *   no effort estimate → -3 (uncertainty penalty applied in risk, not urgency)
  */
 function calcUrgencyScore(deadline, settings) {
   if (['completed', 'canceled', 'archived'].includes(deadline.status)) return 0;
@@ -198,7 +196,7 @@ function calcUrgencyColor(deadline) {
   if (s === 'completed') return URGENCY_COLOR.completed;
   if (s === 'canceled')  return URGENCY_COLOR.canceled;
   if (s === 'paused')    return URGENCY_COLOR.paused;
-  if (deadline.colorOverride) return deadline.colorOverride;
+  if (deadline.colorOverride && isValidColor(deadline.colorOverride)) return deadline.colorOverride;
 
   const daysLeft = calcDaysLeft(deadline);
   if (daysLeft < 0)      return URGENCY_COLOR.overdue;
