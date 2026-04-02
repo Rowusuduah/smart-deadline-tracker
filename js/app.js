@@ -56,6 +56,23 @@ function lockApp() {
   showLoginGate();
 }
 
+// ─── Idle Session Timeout ───────────────────────────────────────
+let _lastActivity = Date.now();
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+function resetIdleTimer() { _lastActivity = Date.now(); }
+
+['mousemove', 'keydown', 'click', 'touchstart'].forEach(evt => {
+  document.addEventListener(evt, resetIdleTimer, { passive: true });
+});
+
+setInterval(() => {
+  if (isAuthenticated() && Date.now() - _lastActivity > IDLE_TIMEOUT_MS) {
+    setAuthenticated(false);
+    location.reload();
+  }
+}, 60000);
+
 // Rate-limiting (sessionStorage so it resets when the tab closes)
 let _loginAttempts     = parseInt(sessionStorage.getItem('sdt_login_attempts') || '0', 10);
 let _loginLockoutUntil = parseInt(sessionStorage.getItem('sdt_login_lockout') || '0', 10);
@@ -278,6 +295,7 @@ function switchTab(targetTabId) {
 }
 
 function renderAll() {
+  refreshCountdownCache();
   populateCategorySelects();
   const activeTab = AppState.activeTab || 'tab-dashboard';
   TABS.forEach(({ tabId, secId }) => {
@@ -728,14 +746,22 @@ function openPostponeDialog(id) {
 
 // ─── Countdown Ticker ────────────────────────────────────────────
 let _countdownTimer = null;
+let _countdownCache = null; // Map<id, deadline>
+
+function refreshCountdownCache() {
+  const deadlines = loadDeadlines();
+  _countdownCache = new Map(deadlines.map(d => [d.id, d]));
+}
 
 function startCountdownTicker() {
-  clearInterval(_countdownTimer);
+  if (_countdownTimer) clearInterval(_countdownTimer);
+  refreshCountdownCache();
   _countdownTimer = setInterval(() => {
-    // Update any visible countdown elements on the dashboard
-    document.querySelectorAll('[data-countdown-id]').forEach(el => {
+    const els = document.querySelectorAll('[data-countdown-id]');
+    if (!els.length) return;
+    els.forEach(el => {
       const id = el.dataset.countdownId;
-      const d  = loadDeadlines().find(dl => dl.id === id);
+      const d  = _countdownCache?.get(id);
       if (!d) return;
       const ms = msUntilDeadline(d);
       el.textContent = ms < 0 ? `Overdue ${formatCountdown(Math.abs(ms))}` : formatCountdown(ms);
@@ -1034,5 +1060,13 @@ function init() {
   }
   // If not authenticated, login gate is already visible (default HTML state)
 }
+
+// ─── Cross-tab Sync ─────────────────────────────────────────────
+window.addEventListener('storage', (e) => {
+  if (e.key && e.key.startsWith('sdt_')) {
+    refreshCountdownCache();
+    renderAll();
+  }
+});
 
 document.addEventListener('DOMContentLoaded', init);
