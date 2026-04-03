@@ -266,11 +266,32 @@ function loadFromDrive() {
     }
   });
 }
+function _silentTokenRefresh() {
+  return new Promise(resolve => {
+    if (!_gTokenClient) { resolve(false); return; }
+    const prevCb = _gTokenClient.callback;
+    _gTokenClient.callback = resp => {
+      _gTokenClient.callback = prevCb;
+      if (resp.error) { resolve(false); return; }
+      _gAccessToken = resp.access_token;
+      resolve(true);
+    };
+    _gTokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+let _autoSaveRetrying = false;
 function queueDriveSync() {
-  if (!_gAccessToken) return;
+  if (!localStorage.getItem(KEY_GDRIVE_CONNECTED)) return;
   clearTimeout(_driveSyncTimer);
   _driveSyncTimer = setTimeout(async () => {
-    if (!_gAccessToken) return;
+    if (!_gAccessToken) {
+      if (!_gTokenClient) initGDrive();
+      if (_gTokenClient) {
+        const ok = await _silentTokenRefresh();
+        if (!ok) { _gSetStatus('Drive disconnected', true); return; }
+      } else { return; }
+    }
     try {
       const data = {}; BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
       const json = JSON.stringify({ _version: 2, _app: APP_NAME, _exported: nowISO(), data }, null, 2);
@@ -278,7 +299,17 @@ function queueDriveSync() {
       if (!fileId) { fileId = await _gFindFile(); if (fileId) localStorage.setItem(KEY_GDRIVE_FILE, fileId); }
       if (fileId) { await _gUpdateFile(fileId, json); } else { fileId = await _gCreateFile(json); localStorage.setItem(KEY_GDRIVE_FILE, fileId); }
       _gSetStatus(`Auto-saved ${new Date().toLocaleTimeString()}`);
-    } catch (err) { if (err._gStatus === 401) { _gAccessToken = null; } }
+      _autoSaveRetrying = false;
+    } catch (err) {
+      if (err._gStatus === 401 && !_autoSaveRetrying) {
+        _gAccessToken = null;
+        _autoSaveRetrying = true;
+        const ok = await _silentTokenRefresh();
+        if (ok) { queueDriveSync(); return; }
+        _gSetStatus('Drive disconnected', true);
+      }
+      _autoSaveRetrying = false;
+    }
   }, 3000);
 }
 
