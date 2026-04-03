@@ -281,6 +281,52 @@ function _silentTokenRefresh() {
   });
 }
 
+/** Silent auto-load — compares dates, no confirm dialog, loads or uploads as needed */
+async function _autoLoadFromDrive() {
+  try {
+    _gSetStatus('Syncing…');
+    let fileId = localStorage.getItem(KEY_GDRIVE_FILE);
+    if (!fileId) { fileId = await _gFindFile(); if (!fileId) { _gSetStatus(''); return; } localStorage.setItem(KEY_GDRIVE_FILE, fileId); }
+    const resp = await _gFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+    const parsed = await resp.json();
+    if (!parsed.data || typeof parsed.data !== 'object') { _gSetStatus(''); return; }
+    const valid = Object.keys(parsed.data).filter(k => BACKUP_KEYS.includes(k));
+    if (!valid.length) { _gSetStatus(''); return; }
+    try { _validateRestoreData(valid, parsed); } catch { _gSetStatus(''); return; }
+
+    const localDate = _getLocalDataDate();
+    const driveDate = parsed._exported ? parsed._exported.slice(0, 10) : '';
+
+    if (localDate && driveDate && localDate > driveDate) {
+      // Local is newer — upload to Drive
+      _gSetStatus('Local data is newer — uploading…');
+      try {
+        const data = {}; BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+        const json = JSON.stringify({ _version: 2, _app: APP_NAME, _exported: nowISO(), data }, null, 2);
+        if (fileId) { await _gUpdateFile(fileId, json); } else { fileId = await _gCreateFile(json); localStorage.setItem(KEY_GDRIVE_FILE, fileId); }
+        _gSetStatus(`Uploaded ${new Date().toLocaleTimeString()}`);
+      } catch (upErr) { console.error('[SDT Drive auto-upload]', upErr); _gSetStatus('Upload failed', true); }
+      return;
+    }
+
+    if (driveDate && (!localDate || driveDate > localDate)) {
+      // Drive is newer — load silently
+      _saveLocalSafetyBackup();
+      valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
+      localStorage.setItem(KEY_GDRIVE_CONNECTED, '1');
+      initTheme(); renderAll();
+      _gSetStatus(`Synced ${driveDate}`);
+      return;
+    }
+
+    _gSetStatus('Up to date');
+  } catch (err) {
+    if (err._gStatus === 401) { _gAccessToken = null; }
+    _gSetStatus('');
+    console.error('[SDT Drive auto-sync]', err);
+  }
+}
+
 let _autoSaveRetrying = false;
 function queueDriveSync() {
   if (!localStorage.getItem(KEY_GDRIVE_CONNECTED)) return;
@@ -1101,7 +1147,8 @@ function initApp() {
         setTimeout(tryAuto, 500); return;
       }
       if (!_gTokenClient) initGDrive();
-      _gIsAutoSync = true; _gPendingOp = () => {};
+      _gIsAutoSync = true;
+      _gPendingOp = _autoLoadFromDrive;
       _gTokenClient.requestAccessToken({ prompt: '' });
     }
     setTimeout(tryAuto, 800);
