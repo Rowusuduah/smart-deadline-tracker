@@ -197,8 +197,9 @@ async function _gCreateFile(content) {
   form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
   form.append('file',     new Blob([content],             { type: 'application/json' }));
   const resp = await _gFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: form });
+  if (!resp.ok) { const text = await resp.text(); throw new Error(`Drive create failed (${resp.status}): ${text}`); }
   const data = await resp.json();
-  if (!data.id) throw new Error('Drive create failed: ' + JSON.stringify(data));
+  if (!data.id) throw new Error('Drive create failed: no file ID returned');
   return data.id;
 }
 async function _gUpdateFile(fileId, content) {
