@@ -229,6 +229,13 @@ function saveToDrive() {
     }
   });
 }
+function _getLocalDataDate() {
+  try {
+    const deadlines = JSON.parse(localStorage.getItem('sdt_deadlines') || '[]');
+    const dates = deadlines.map(d => d.updatedAt || d.createdAt).filter(Boolean).sort();
+    return dates.length ? dates[dates.length - 1].slice(0, 10) : null;
+  } catch { return null; }
+}
 let _loadFromDriveRetries = 0;
 function loadFromDrive() {
   gWithToken(async () => {
@@ -242,7 +249,12 @@ function loadFromDrive() {
       const valid = Object.keys(parsed.data).filter(k => BACKUP_KEYS.includes(k));
       if (!valid.length) throw new Error('No data');
       _validateRestoreData(valid, parsed);
-      if (!confirm(`Load backup from Drive?\n\nThis will replace all current data.`)) { _gSetStatus(''); return; }
+      const localDate = _getLocalDataDate();
+      const driveDate = parsed._exported ? parsed._exported.slice(0, 10) : '';
+      const newerWarning = (localDate && driveDate && localDate > driveDate)
+        ? `\n\n⚠️ WARNING: Your local data (${localDate}) is NEWER than the Drive backup (${driveDate}). Loading will overwrite your recent changes!`
+        : '';
+      if (!confirm(`Load backup from Drive?${newerWarning}\n\nThis will replace all current data.`)) { _gSetStatus(''); return; }
       valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
       localStorage.setItem(KEY_GDRIVE_CONNECTED, '1');
       initTheme(); renderAll(); _gSetStatus(`Loaded ${parsed._exported || ''}`);
