@@ -255,6 +255,7 @@ function loadFromDrive() {
         ? `\n\n⚠️ WARNING: Your local data (${localDate}) is NEWER than the Drive backup (${driveDate}). Loading will overwrite your recent changes!`
         : '';
       if (!confirm(`Load backup from Drive?${newerWarning}\n\nThis will replace all current data.`)) { _gSetStatus(''); return; }
+      _saveLocalSafetyBackup();
       valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
       localStorage.setItem(KEY_GDRIVE_CONNECTED, '1');
       initTheme(); renderAll(); _gSetStatus(`Loaded ${parsed._exported || ''}`);

@@ -88,6 +88,33 @@ function saveCategories(arr) { _save(STORAGE_KEYS.CATEGORIES, arr); }
 function loadGoals()    { return _load(STORAGE_KEYS.GOALS, []); }
 function saveGoals(arr) { _save(STORAGE_KEYS.GOALS, arr); }
 
+// ─── Safety Backup ──────────────────────────────────────────────
+const KEY_SAFETY_BACKUP = 'sdt_safety_backup';
+function _saveLocalSafetyBackup() {
+  try {
+    const data = {};
+    let hasData = false;
+    BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) { data[k] = v; hasData = true; } });
+    if (!hasData) return;
+    const backup = { _saved: new Date().toISOString(), data };
+    const existing = JSON.parse(localStorage.getItem(KEY_SAFETY_BACKUP) || '[]');
+    existing.unshift(backup);
+    while (existing.length > 3) existing.pop();
+    localStorage.setItem(KEY_SAFETY_BACKUP, JSON.stringify(existing));
+  } catch (e) { console.warn('[SDT] Safety backup failed:', e); }
+}
+function restoreSafetyBackup(index = 0) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(KEY_SAFETY_BACKUP) || '[]');
+    if (!existing[index]) { console.error('No safety backup at index', index); return false; }
+    console.log('Restoring safety backup from:', existing[index]._saved);
+    Object.entries(existing[index].data).forEach(([k, v]) => localStorage.setItem(k, v));
+    location.reload();
+    return true;
+  } catch (e) { console.error('Safety restore failed:', e); return false; }
+}
+window.restoreSafetyBackup = restoreSafetyBackup;
+
 // ─── Export / Import ─────────────────────────────────────────────
 function exportJSON() {
   const data = {};
@@ -125,6 +152,7 @@ function importJSON(file, onSuccess) {
       _validateRestoreData(valid, parsed);
       const exportedDate = parsed._exported ? new Date(parsed._exported).toLocaleString() : 'unknown date';
       if (!confirm(`Restore backup from ${exportedDate}?\n\nThis will replace all current data on this device.`)) return;
+      _saveLocalSafetyBackup();
       valid.forEach(k => localStorage.setItem(k, parsed.data[k]));
       if (typeof onSuccess === 'function') onSuccess();
     } catch (err) {
