@@ -149,7 +149,7 @@ function bindAuthEvents() {
 }
 
 const APP_NAME           = 'Smart Deadline Tracker';
-const GDRIVE_CLIENT_ID   = '';  // TODO: paste your Google Cloud OAuth Client ID
+const GDRIVE_CLIENT_ID   = '849010067181-a3rhddgsi4iaeij6fu0etik7qrle2i3v.apps.googleusercontent.com';
 const GDRIVE_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
 const GDRIVE_FILENAME    = 'SmartDeadlineTracker_Backup.json';
 const KEY_GDRIVE_FILE    = 'sdt_gdrive_file_id';
