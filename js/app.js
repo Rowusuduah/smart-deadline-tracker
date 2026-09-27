@@ -13,138 +13,22 @@ window.addEventListener('unhandledrejection', e => {
   console.error('[SDT] Unhandled rejection:', e.reason);
 });
 
-// ─── Auth ─────────────────────────────────────────────────────────
-const AUTH_KEY      = 'sdt_auth';
-// SHA-256 of the password — never store the plain password
-const PASS_HASH     = 'c62ededa6c50ed85cb4308545bd027bf6c72141f82e6c54e8a2dc89651ac82e0';
-
-async function hashPassword(password) {
-  const msgBuffer  = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-function isAuthenticated() {
-  return localStorage.getItem(AUTH_KEY) === '1';
-}
-
-function setAuthenticated(value) {
-  if (value) localStorage.setItem(AUTH_KEY, '1');
-  else localStorage.removeItem(AUTH_KEY);
-}
+// ─── Lock screen (email code) ───────────────────────────────────
+// js/email-login.js (shared with MoneyTrack and FE Civil) emails a 6-digit code to the
+// owner's Gmail and stores a signed 30-day pass. This is a screen lock, not encryption.
+const LOCK_CONFIRM = "Lock MoneyTrack, Deadline Tracker and FE Civil on this device? You'll need a new email code to open them.";
 
 function showApp() {
   const gate = document.getElementById('login-gate');
   if (gate) gate.classList.add('hidden');
 }
 
-function showLoginGate(errorMsg) {
-  const gate = document.getElementById('login-gate');
-  if (gate) gate.classList.remove('hidden');
-  const input = document.getElementById('login-password');
-  if (input) { input.value = ''; input.focus(); }
-  if (errorMsg) {
-    const err = document.getElementById('login-error');
-    if (err) err.textContent = errorMsg;
-  }
-}
-
-function lockApp() {
-  setAuthenticated(false);
-  showLoginGate();
-}
-
-// ─── Idle Session Timeout ───────────────────────────────────────
-let _lastActivity = Date.now();
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-
-function resetIdleTimer() { _lastActivity = Date.now(); }
-
-['mousemove', 'keydown', 'click', 'touchstart'].forEach(evt => {
-  document.addEventListener(evt, resetIdleTimer, { passive: true });
-});
-
-setInterval(() => {
-  if (isAuthenticated() && Date.now() - _lastActivity > IDLE_TIMEOUT_MS) {
-    clearInterval(_countdownTimer);
-    setAuthenticated(false);
-    location.reload();
-  }
-}, 60000);
-
-// Rate-limiting (sessionStorage so it resets when the tab closes)
-let _loginAttempts     = parseInt(sessionStorage.getItem('sdt_login_attempts') || '0', 10);
-let _loginLockoutUntil = parseInt(sessionStorage.getItem('sdt_login_lockout') || '0', 10);
-const LOGIN_MAX_ATTEMPTS  = 5;
-const LOGIN_BASE_DELAY_MS = 1000;
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const input    = document.getElementById('login-password');
-  const errorEl  = document.getElementById('login-error');
-  const btn      = document.getElementById('login-btn');
-  const password = (input?.value || '').trim();
-
-  if (!password) {
-    if (errorEl) errorEl.textContent = 'Please enter your password.';
-    return;
-  }
-
-  // Rate-limit check
-  const now = Date.now();
-  if (_loginLockoutUntil && now < _loginLockoutUntil) {
-    const secs = Math.ceil((_loginLockoutUntil - now) / 1000);
-    if (errorEl) errorEl.textContent = `Too many attempts. Try again in ${secs}s.`;
-    return;
-  }
-
-  btn.textContent = 'Checking…';
-  btn.disabled    = true;
-
-  const hash = await hashPassword(password);
-
-  if (hash === PASS_HASH) {
-    _loginAttempts = 0;
-    sessionStorage.removeItem('sdt_login_attempts');
-    sessionStorage.removeItem('sdt_login_lockout');
-    setAuthenticated(true);
-    if (errorEl) errorEl.textContent = '';
-    showApp();
-    initApp();
-  } else {
-    _loginAttempts++;
-    sessionStorage.setItem('sdt_login_attempts', String(_loginAttempts));
-    if (_loginAttempts >= LOGIN_MAX_ATTEMPTS) {
-      const delay = Math.min(LOGIN_BASE_DELAY_MS * Math.pow(2, _loginAttempts - LOGIN_MAX_ATTEMPTS), 60000);
-      _loginLockoutUntil = now + delay;
-      sessionStorage.setItem('sdt_login_lockout', String(_loginLockoutUntil));
-      if (errorEl) errorEl.textContent = `Too many attempts. Locked for ${Math.ceil(delay / 1000)}s.`;
-    } else {
-      if (errorEl) errorEl.textContent = 'Incorrect password. Try again.';
-    }
-    if (input) { input.value = ''; input.focus(); }
-  }
-
-  btn.textContent = 'Unlock';
-  btn.disabled    = false;
-}
-
-function bindAuthEvents() {
-  document.getElementById('login-form')?.addEventListener('submit', handleLogin);
-
-  // Show/hide password toggle
-  document.getElementById('login-eye')?.addEventListener('click', () => {
-    const input = document.getElementById('login-password');
-    if (!input) return;
-    input.type = input.type === 'password' ? 'text' : 'password';
-    input.focus();
-  });
-
-  // Lock button in nav
+function bindLockButton() {
   document.getElementById('logout-btn')?.addEventListener('click', () => {
-    if (confirm('Lock the app?')) lockApp();
+    if (!confirm(LOCK_CONFIRM)) return;
+    clearInterval(_countdownTimer);
+    EmailLogin.lock();
+    location.reload();
   });
 }
 
@@ -1156,14 +1040,21 @@ function initApp() {
   }
 }
 
-// Entry point — always runs; checks auth first
-function init() {
-  bindAuthEvents();
-  if (isAuthenticated()) {
+// Entry point: open the app when this device holds a valid pass, else show the lock screen
+async function init() {
+  bindLockButton();
+  EmailLogin.onLockedElsewhere(() => location.reload());
+  if (await EmailLogin.hasValidPass()) {
     showApp();
     initApp();
+    return;
   }
-  // If not authenticated, login gate is already visible (default HTML state)
+  EmailLogin.mountLockScreen({
+    app: 'smart-deadline-tracker',
+    legacyKeys: ['sdt_auth'],
+    legacySessionKeys: ['sdt_login_attempts', 'sdt_login_lockout'],
+    onUnlock: () => { showApp(); initApp(); },
+  });
 }
 
 // ─── Cross-tab Sync ─────────────────────────────────────────────

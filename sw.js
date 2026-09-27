@@ -1,10 +1,11 @@
 'use strict';
 
-const CACHE_NAME = 'sdt-v13';
+const CACHE_NAME = 'sdt-v16';
 const APP_SHELL  = [
   './index.html',
   './css/styles.css',
   './js/utils.js',
+  './js/email-login.js',
   './js/storage.js',
   './js/calculations.js',
   './js/state.js',
