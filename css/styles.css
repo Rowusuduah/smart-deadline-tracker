@@ -74,7 +74,7 @@ body.light {
   --surf4:  #D9D5CC;
   --text:   #15171C;
   --muted:  #62676F;
-  --faint:  #7D8189;
+  --faint:  #6B7078;
   --border: #E8E5DE;
   --brig:   #D9D5CC;
   --hair:   #F0EDE7;
@@ -1116,6 +1116,26 @@ body.light .toast-success { color: #FFFFFF; }
 .mono { font-family: var(--font-body); font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* Priority + status badges (theme colours, readable in both modes) */
+.prio-critical { background: var(--red-soft); color: var(--red); }
+.prio-high     { background: color-mix(in srgb, var(--orange) 14%, transparent); color: var(--orange); }
+.prio-medium   { background: var(--gold-soft); color: var(--gold); }
+.prio-low, .st-not-started, .st-paused, .st-canceled { background: var(--surf3); color: var(--muted); }
+.st-planned     { background: var(--accent-soft); color: var(--accent-text); }
+.st-in-progress { background: color-mix(in srgb, var(--teal) 14%, transparent); color: var(--teal); }
+.st-at-risk     { background: var(--gold-soft); color: var(--gold); }
+.st-overdue     { background: var(--red-soft); color: var(--red); }
+.st-completed   { background: var(--green-soft); color: var(--green); }
+.cal-cell.has-overdue .cal-day-num { color: var(--red); }
+
+/* Every control at least 40px tall (audit) */
+.icon-btn, .icon-btn.sm { min-width: 40px; min-height: 40px; }
+#timeline-group-by, #analytics-period {
+  min-height: 40px; padding: 8px 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surf); color: var(--text); font-size: 14px;
+}
+.cat-color-picker { width: 40px; height: 40px; }
+
 /* Section headers (title + buttons, inline flex in the markup) wrap instead of
    pushing the page wider than the phone. */
 .sec > div[style*="space-between"] { flex-wrap: wrap; gap: 10px 12px; }
@@ -1228,7 +1248,8 @@ body.light .toast-success { color: #FFFFFF; }
   .filter-bar input[type="search"], .filter-bar input[type="text"], .filter-bar label { grid-column: 1 / -1; min-width: 0 !important; }
   /* 16px inputs: iOS zooms the page on anything smaller */
   .form-group input, .form-group select, .form-group textarea,
-  .filter-bar select, .filter-bar input, .subtask-title, .subtask-weight { font-size: 16px; }
+  .filter-bar select, .filter-bar input, .subtask-title, .subtask-weight,
+  #timeline-group-by, #analytics-period { font-size: 16px; }
 }
 @media (max-width: 360px) {
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

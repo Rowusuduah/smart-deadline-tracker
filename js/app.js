@@ -459,6 +459,8 @@ function toggleTheme() {
   try { localStorage.setItem(STORAGE_KEYS.THEME, theme); } catch {}
   const s = loadSettings(); s.theme = theme; saveSettings(s);
   updateThemeBtn();
+  // Urgency colours are painted inline and differ per theme: redraw.
+  if (isAuthenticated()) renderAll();
 }
 
 // ─── Toast Notifications ─────────────────────────────────────────
@@ -1208,6 +1210,7 @@ function initApp() {
 
 // Entry point — always runs; checks auth first
 function init() {
+  initTheme();   // the lock screen follows the theme too
   bindAuthEvents();
   if (isAuthenticated()) {
     showApp();

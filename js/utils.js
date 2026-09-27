@@ -253,6 +253,19 @@ function isSafeUrl(url) {
 function isValidColor(c) {
   return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c);
 }
+// Light mode: the urgency palette (Tailwind 400 shades) is too pale for text on
+// white, so it becomes the 700 shade of the same hue there. Other colours
+// (a category colour the owner chose) pass through unchanged.
+const LIGHT_SHADE = {
+  '#f87171': '#b42318', '#ef4444': '#b42318', '#f97316': '#a8380b', '#fb923c': '#a8380b',
+  '#fbbf24': '#855400', '#4ade80': '#11703a', '#60a5fa': '#1d4ed8', '#818cf8': '#4338ca',
+  '#6b7280': '#565d69', '#9ca3af': '#5b616d',
+};
+// Dark mode: the greys for completed / canceled are too dim on navy.
+const DARK_SHADE = { '#6b7280': '#9ca3af' };
 function safeColor(c, fallback) {
-  return isValidColor(c) ? c : (fallback || '#888888');
+  const v = isValidColor(c) ? c : (fallback || '#888888');
+  const light = typeof document !== 'undefined' && document.body && document.body.classList.contains('light');
+  const key = String(v).toLowerCase();
+  return (light ? LIGHT_SHADE[key] : DARK_SHADE[key]) || v;
 }

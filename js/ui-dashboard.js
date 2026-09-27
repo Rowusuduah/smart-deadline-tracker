@@ -200,9 +200,9 @@ function progressBar(pct, color) {
 
 function riskBadgeHtml(riskLevel) {
   if (riskLevel === 'safe') return '';
-  const map = { warning: '#fbbf24', critical: '#f87171' };
-  const color = map[riskLevel] || 'var(--muted)';
-  return `<span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${riskLevel}</span>`;
+  // Theme colours (styles.css .risk-badge-*), readable in light and dark mode.
+  const level = riskLevel === 'critical' ? 'critical' : 'warning';
+  return `<span class="badge risk-badge-${level}">${escapeHTML(String(riskLevel))}</span>`;
 }
 
 function healthDot(healthStatus) {
