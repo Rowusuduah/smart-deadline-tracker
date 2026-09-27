@@ -183,3 +183,10 @@ git push -u origin main
 ## Data Privacy
 
 All data is stored in your browser's `localStorage`. Nothing is sent to any server unless you explicitly use Google Drive Sync. Export JSON regularly as a backup.
+
+## Login
+
+The app opens with **Email me a code**: a 6-digit code goes to the owner's Gmail, and a
+correct code keeps this device unlocked for 30 days (shared with MoneyTrack and FE Civil on
+the same site; Lock in any of them locks all three). `js/email-login.js` is synced from the
+private `login-codes` repo; do not edit it here. This is a screen lock, not encryption.

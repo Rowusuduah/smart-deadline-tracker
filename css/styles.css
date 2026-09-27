@@ -152,6 +152,19 @@ body.light {
 #login-eye svg { width: 19px; height: 19px; }
 #login-eye:hover { color: var(--text); background: var(--surf3); }
 .login-error { font-size: 13px; color: var(--red); min-height: 18px; margin-bottom: 6px; }
+/* Email-code lock screen (js/email-login.js) */
+.login-card [hidden] { display: none !important; }
+.el-wide { width: 100%; margin-top: 10px; justify-content: center; }
+.el-label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+.login-field input.el-code { min-height: 52px; font-size: 22px; font-weight: 600; letter-spacing: .4em; text-align: center; padding-right: 14px; }
+.el-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; margin-top: 12px; font-size: 13px; }
+.el-link {
+  background: none; border: 0; padding: 0; min-height: 40px;
+  display: inline-flex; align-items: center;
+  color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.el-hint { color: var(--muted); }
 
 /* Round icon buttons in the top bar (theme, lock). */
 #theme-toggle, #logout-btn {
