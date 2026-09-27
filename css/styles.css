@@ -151,6 +151,14 @@ body.light {
   font-size: .82rem; color: var(--red);
   min-height: 18px; margin-bottom: 6px;
 }
+/* Email-code lock screen (js/email-login.js) */
+.login-card [hidden] { display: none !important; }
+.el-wide { width: 100%; margin-top: 10px; justify-content: center; }
+.el-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+.login-field input.el-code { font-size: 22px; letter-spacing: .45em; text-align: center; padding-right: 14px; }
+.el-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 12px; font-size: 13px; }
+.el-link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.el-hint { color: var(--muted); }
 #logout-btn {
   width: 36px; height: 36px; border-radius: 50%;
   background: transparent; border: 1px solid var(--brig);
