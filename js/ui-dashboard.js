@@ -12,6 +12,7 @@ function renderDashboard() {
   const stats = getDashboardStats(deadlines, settings);
 
   renderDashboardKPIs(stats);
+  renderDashboardChainage(deadlines, settings);
   renderDashboardUrgentPanel(stats);
   renderDashboardAtRisk(stats);
   renderDashboardCategoryLoad(stats);
@@ -39,6 +40,77 @@ function kpiCard(label, value, sub, color) {
     ${sub ? `<div class="kpi-sub">${escapeHTML(sub)}</div>` : ''}
   </div>`;
 }
+
+// ─── Chainage strip ──────────────────────────────────────────────
+// The next 30 days drawn like a surveyed centreline: today is station 0 and
+// every open deadline is staked at its due date, so crowded weeks show up
+// at a glance. Stakes share "lanes" (stake heights) so their flags never overlap.
+const CHAINAGE_DAYS = 30;
+const CHAINAGE_MAX_LANES = 6;
+
+function renderDashboardChainage(deadlines, settings) {
+  const el = document.getElementById('dash-chainage');
+  if (!el) return;
+  const today = todayISO();
+  const open = deadlines
+    .filter(d => !d.isArchived && !['archived', 'canceled', 'completed'].includes(d.status))
+    .map(d => enrichDeadline(d, settings));
+  const overdue  = open.filter(d => d._isOverdue);
+  const later    = open.filter(d => d._daysLeft > CHAINAGE_DAYS);
+  const upcoming = open
+    .filter(d => d._daysLeft >= 0 && d._daysLeft <= CHAINAGE_DAYS)
+    .sort((a, b) => a._daysLeft - b._daysLeft || b._urgencyScore - a._urgencyScore);
+
+  // Pack flags into lanes by the pixels they actually cover: a flag runs right
+  // of its stake, or left of it when it would run off the end of the line.
+  const width = Math.max(240, (el.clientWidth || 640) - 16);
+  const flagW = width < 520 ? 136 : 162;
+  const lanes = [];                        // lanes[i] = occupied [start, end] px intervals
+  const stakes = upcoming.map(d => {
+    const x = (d._daysLeft / CHAINAGE_DAYS) * width;
+    const flip = x + flagW > width;
+    const span = flip ? [x - flagW, x] : [x, x + flagW];
+    const fits = lane => lane.every(([a, b]) => span[1] + 6 <= a || span[0] >= b + 6);
+    let lane = lanes.findIndex(fits);
+    if (lane === -1 && lanes.length < CHAINAGE_MAX_LANES) { lanes.push([]); lane = lanes.length - 1; }
+    if (lane === -1) lane = lanes.reduce((best, l, i) => (l.length < lanes[best].length ? i : best), 0);
+    lanes[lane].push(span);
+    return { d, lane, flip };
+  });
+
+  const ticks = Array.from({ length: CHAINAGE_DAYS + 1 }, (_, day) =>
+    `<span class="ch-tick${day % 7 === 0 ? ' major' : ''}" style="left:${(day / CHAINAGE_DAYS) * 100}%"></span>`).join('');
+  const scale = [0, 7, 14, 21, 28].map(day =>
+    `<span class="ch-mark" style="left:${(day / CHAINAGE_DAYS) * 100}%">${day === 0 ? 'Today' : escapeHTML(formatDateShort(addDays(today, day)))}</span>`).join('');
+
+  const flags = stakes.map(({ d, lane, flip }) => {
+    const pct = (d._daysLeft / CHAINAGE_DAYS) * 100;
+    // Same urgency bands as the Top Urgent cards; a critical risk always reads as "act now".
+    const band = d._riskLevel === 'critical' || d._daysLeft <= 3 ? 'critical' : (d._daysLeft <= 7 ? 'warning' : 'safe');
+    const when = formatRelativeDeadline(d._daysLeft);
+    return `<button type="button" class="ch-stake risk-${band}${flip ? ' flip' : ''}"
+        style="left:${pct}%;--lane:${lane}" data-action="view" data-id="${escapeHTML(d.id)}"
+        aria-label="${escapeHTML(d.title)}, due ${escapeHTML(formatDateShort(d.dueDate))} (${escapeHTML(when)})">
+      <span class="ch-flag"><b>${escapeHTML(truncate(d.title, 26))}</b><small>${escapeHTML(when)}</small></span>
+    </button>`;
+  }).join('');
+
+  const notes = [];
+  if (overdue.length) notes.push(`<button type="button" class="ch-note overdue" data-action="switch-tab" data-tab="tab-deadlines">${overdue.length} overdue behind today</button>`);
+  if (later.length) notes.push(`<span class="ch-note">${later.length} more beyond ${CHAINAGE_DAYS} days</span>`);
+  if (!upcoming.length) notes.unshift(`<span class="ch-note">Nothing due in the next ${CHAINAGE_DAYS} days.</span>`);
+
+  el.innerHTML = `<div class="ch-field" style="--lanes:${Math.max(1, lanes.length)}">${flags}</div>
+    <div class="ch-line" aria-hidden="true">${ticks}<span class="ch-today"></span></div>
+    <div class="ch-scale" aria-hidden="true">${scale}</div>
+    ${notes.length ? `<div class="ch-notes">${notes.join('')}</div>` : ''}`;
+}
+
+// Stake lanes depend on the strip's width, so re-plot after the viewport settles.
+window.addEventListener('resize', debounce(() => {
+  const sec = document.getElementById('sec-dashboard');
+  if (sec && sec.classList.contains('on')) renderDashboardChainage(loadDeadlines(), loadSettings());
+}, 250));
 
 // ─── Top Urgent Panel ────────────────────────────────────────────
 function renderDashboardUrgentPanel(stats) {
