@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Smart Deadline Tracker — intelligent deadline management with urgency scoring, workload planning, and risk detection.">
-  <meta name="theme-color" content="#131109">
+  <meta name="theme-color" content="#0b2240">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,9 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <title>Smart Deadline Tracker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="preload" href="fonts/Archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -78,10 +76,19 @@
     <!-- ══ DASHBOARD ════════════════════════════════════════════ -->
     <section id="sec-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" class="sec on">
       <h1 class="section-title">Dashboard</h1>
-      <p class="section-sub">Your deadline intelligence at a glance.</p>
+      <p class="section-sub">What is due, what is at risk, and where the crunch weeks are.</p>
 
       <!-- KPI Strip -->
       <div class="summary-grid" id="dash-kpis" aria-live="polite"></div>
+
+      <!-- Chainage: the next 30 days as a staked centreline -->
+      <section class="card chainage-card" aria-labelledby="chainage-title">
+        <div class="card-title">
+          <span id="chainage-title">Next 30 days</span>
+          <span class="card-note">Tap a stake to open it</span>
+        </div>
+        <div class="chainage" id="dash-chainage"></div>
+      </section>
 
       <!-- Main grid: Urgent + At-Risk | Workload + Category -->
       <div class="two-col">
