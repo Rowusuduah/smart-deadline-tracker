@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'sdt-v13';
+const CACHE_NAME = 'sdt-v16';
 const APP_SHELL  = [
   './index.html',
   './css/styles.css',
@@ -19,6 +19,7 @@ const APP_SHELL  = [
   './js/app.js',
   './icons/icon.svg',
   './manifest.json',
+  './fonts/Geist-latin.woff2',
 ];
 
 // Pre-cache the app shell on install

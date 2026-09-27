@@ -12,6 +12,7 @@ function renderDashboard() {
   const stats = getDashboardStats(deadlines, settings);
 
   renderDashboardKPIs(stats);
+  renderDashboardWeek(deadlines);
   renderDashboardUrgentPanel(stats);
   renderDashboardAtRisk(stats);
   renderDashboardCategoryLoad(stats);
@@ -38,6 +39,33 @@ function kpiCard(label, value, sub, color) {
     <div class="kpi-value" style="color:${color}">${value}</div>
     ${sub ? `<div class="kpi-sub">${escapeHTML(sub)}</div>` : ''}
   </div>`;
+}
+
+// ─── The next 7 days ─────────────────────────────────────────────
+// A week strip: each day shows how many open deadlines fall on it (a red dot
+// for a critical one). Tapping a day opens it in the Calendar.
+function renderDashboardWeek(deadlines) {
+  const el = document.getElementById('dash-week');
+  if (!el) return;
+  const today = todayISO();
+  const open = deadlines.filter(d => !d.isArchived && d.status !== 'completed' && d.dueDate);
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const iso = addDays(today, i);
+    days.push({ iso, due: open.filter(d => d.dueDate === iso) });
+  }
+  el.innerHTML = days.map(({ iso, due }, i) => {
+    const dt = new Date(iso + 'T00:00:00');
+    const dow = dt.toLocaleDateString(undefined, { weekday: 'short' });
+    const long = dt.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    const dots = due.slice(0, 3).map(d => `<span class="wk-dot${d.priority === 'critical' ? ' crit' : ''}"></span>`).join('');
+    const label = `${i === 0 ? 'Today, ' : ''}${long}: ${due.length ? due.length + ' due' : 'nothing due'}`;
+    return `<button type="button" class="wk-day${i === 0 ? ' today' : ''}" data-week-date="${escapeHTML(iso)}" aria-label="${escapeHTML(label)}">
+      <span class="wk-dow">${escapeHTML(dow)}</span>
+      <span class="wk-num">${dt.getDate()}</span>
+      <span class="wk-dots">${dots}</span>
+    </button>`;
+  }).join('');
 }
 
 // ─── Top Urgent Panel ────────────────────────────────────────────
