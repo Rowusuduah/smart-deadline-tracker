@@ -267,6 +267,8 @@ function switchTab(targetTabId) {
     sec.classList.toggle('on', active);
   });
   AppState.activeTab = targetTabId;
+  syncMoreButton(targetTabId);
+  setMoreMenu(false);
   if (targetTabId === 'tab-dashboard') renderDashboard();
   if (targetTabId === 'tab-deadlines') { populateCategorySelects(); renderListTab(); renderActiveFilters(); }
   if (targetTabId === 'tab-calendar')  { populateCategorySelects(); renderCalendarTab(); }
@@ -299,19 +301,41 @@ function renderAll() {
 }
 
 // ─── Theme ───────────────────────────────────────────────────────
+// Until the owner picks one with the toggle, the theme follows the phone.
 function initTheme() {
-  const s = loadSettings();
-  const stored = localStorage.getItem(STORAGE_KEYS.THEME);
-  const theme  = stored || s.theme || 'dark';
+  let stored = null;
+  try { stored = localStorage.getItem(STORAGE_KEYS.THEME); } catch {}
+  const system = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  const theme  = stored || system;
   document.body.classList.toggle('light', theme === 'light');
   updateThemeBtn();
 }
+const THEME_SVG = {
+  moon: '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+  sun:  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+};
 function updateThemeBtn() {
+  const isLight = document.body.classList.contains('light');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isLight ? '#F4F3EF' : '#070B14');
   const btn = document.getElementById('theme-toggle');
   if (!btn) return;
-  const isLight = document.body.classList.contains('light');
-  btn.textContent = isLight ? '🌙' : '☀️';
+  btn.innerHTML = isLight ? THEME_SVG.moon : THEME_SVG.sun;
   btn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+}
+
+// ─── "More" menu (phones): Timeline, Analytics, Settings ─────────
+const MORE_TABS = ['tab-timeline', 'tab-analytics', 'tab-settings'];
+function setMoreMenu(open) {
+  const menu = document.getElementById('more-menu');
+  const btn  = document.getElementById('nav-more');
+  if (!menu || !btn) return;
+  menu.hidden = !open;
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) menu.querySelector('button')?.focus();
+}
+function syncMoreButton(activeTabId) {
+  document.getElementById('nav-more')?.classList.toggle('on', MORE_TABS.includes(activeTabId));
+  document.querySelectorAll('#more-menu [data-more-tab]').forEach(b => b.classList.toggle('on', b.dataset.moreTab === activeTabId));
 }
 function toggleTheme() {
   document.body.classList.toggle('light');
@@ -319,6 +343,8 @@ function toggleTheme() {
   try { localStorage.setItem(STORAGE_KEYS.THEME, theme); } catch {}
   const s = loadSettings(); s.theme = theme; saveSettings(s);
   updateThemeBtn();
+  // Urgency colours are painted inline and differ per theme: redraw.
+  if (document.getElementById('login-gate')?.classList.contains('hidden')) renderAll();
 }
 
 // ─── Toast Notifications ─────────────────────────────────────────
@@ -825,6 +851,32 @@ function bindEvents() {
   // Theme toggle
   document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
 
+  // "More" menu (phones)
+  document.getElementById('nav-more')?.addEventListener('click', e => {
+    e.stopPropagation();
+    setMoreMenu(document.getElementById('more-menu')?.hidden);
+  });
+  document.getElementById('more-menu')?.addEventListener('click', e => {
+    const item = e.target.closest('[data-more-tab]');
+    if (item) switchTab(item.dataset.moreTab);
+  });
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('more-menu');
+    if (menu && !menu.hidden && !e.target.closest('#more-menu, #nav-more')) setMoreMenu(false);
+  });
+  document.addEventListener('keydown', e => {
+    const menu = document.getElementById('more-menu');
+    if (e.key === 'Escape' && menu && !menu.hidden) { setMoreMenu(false); document.getElementById('nav-more')?.focus(); }
+  });
+
+  // Dashboard week strip: a day opens in the Calendar
+  document.getElementById('dash-week')?.addEventListener('click', e => {
+    const day = e.target.closest('[data-week-date]');
+    if (!day) return;
+    switchTab('tab-calendar');
+    if (typeof renderCalendarDayPopup === 'function') renderCalendarDayPopup(day.dataset.weekDate);
+  });
+
   // Global add buttons
   document.getElementById('btn-add-deadline')?.addEventListener('click', () => openModal());
   document.getElementById('btn-add-deadline-list')?.addEventListener('click', () => openModal());
@@ -1042,6 +1094,7 @@ function initApp() {
 
 // Entry point: open the app when this device holds a valid pass, else show the lock screen
 async function init() {
+  initTheme();   // the lock screen follows the theme too
   bindLockButton();
   EmailLogin.onLockedElsewhere(() => location.reload());
   if (await EmailLogin.hasValidPass()) {

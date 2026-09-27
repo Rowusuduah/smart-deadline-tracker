@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Smart Deadline Tracker — intelligent deadline management with urgency scoring, workload planning, and risk detection.">
-  <meta name="theme-color" content="#131109">
+  <meta name="theme-color" content="#070B14">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,9 +13,6 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <title>Smart Deadline Tracker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -62,18 +59,26 @@
     </div>
 
     <div role="tablist" aria-label="App sections">
-      <button role="tab" id="tab-dashboard" aria-selected="true"  aria-controls="sec-dashboard" tabindex="0">Dashboard</button>
-      <button role="tab" id="tab-deadlines" aria-selected="false" aria-controls="sec-deadlines" tabindex="-1">Deadlines</button>
-      <button role="tab" id="tab-calendar"  aria-selected="false" aria-controls="sec-calendar"  tabindex="-1">Calendar</button>
-      <button role="tab" id="tab-timeline"  aria-selected="false" aria-controls="sec-timeline"  tabindex="-1">Timeline</button>
-      <button role="tab" id="tab-focus"     aria-selected="false" aria-controls="sec-focus"     tabindex="-1">Focus</button>
-      <button role="tab" id="tab-analytics" aria-selected="false" aria-controls="sec-analytics" tabindex="-1">Analytics</button>
-      <button role="tab" id="tab-settings"  aria-selected="false" aria-controls="sec-settings"  tabindex="-1">Settings</button>
+      <button role="tab" id="tab-dashboard" aria-selected="true"  aria-controls="sec-dashboard" tabindex="0"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>Dashboard</span></button>
+      <button role="tab" id="tab-deadlines" aria-selected="false" aria-controls="sec-deadlines" tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M3.5 6l1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/></svg><span>Deadlines</span></button>
+      <button role="tab" id="tab-calendar"  aria-selected="false" aria-controls="sec-calendar"  tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>Calendar</span></button>
+      <button role="tab" id="tab-timeline"  aria-selected="false" aria-controls="sec-timeline"  tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h9M7 12h10M11 18h10"/></svg><span>Timeline</span></button>
+      <button role="tab" id="tab-focus"     aria-selected="false" aria-controls="sec-focus"     tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><span>Focus</span></button>
+      <button role="tab" id="tab-analytics" aria-selected="false" aria-controls="sec-analytics" tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span>Analytics</span></button>
+      <button role="tab" id="tab-settings"  aria-selected="false" aria-controls="sec-settings"  tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>Settings</span></button>
     </div>
 
-    <button class="nav-add-btn" id="btn-add-deadline" aria-label="Add new deadline">+ Add</button>
-    <button id="theme-toggle" aria-label="Toggle light/dark theme">☀️</button>
-    <button id="logout-btn" aria-label="Lock app" title="Lock">🔒</button>
+    <!-- Phones: Timeline, Analytics and Settings live under More -->
+    <button type="button" class="nav-more" id="nav-more" aria-haspopup="true" aria-expanded="false" aria-controls="more-menu"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span>More</span></button>
+    <div class="more-menu" id="more-menu" hidden>
+      <button type="button" data-more-tab="tab-timeline"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h9M7 12h10M11 18h10"/></svg>Timeline</button>
+      <button type="button" data-more-tab="tab-analytics"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Analytics</button>
+      <button type="button" data-more-tab="tab-settings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
+    </div>
+
+    <button class="nav-add-btn" id="btn-add-deadline" aria-label="Add new deadline"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+    <button id="theme-toggle" aria-label="Toggle light/dark theme"></button>
+    <button id="logout-btn" aria-label="Lock app" title="Lock"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
   </nav>
 
   <!-- ══ MAIN ══════════════════════════════════════════════════════ -->
@@ -86,6 +91,9 @@
 
       <!-- KPI Strip -->
       <div class="summary-grid" id="dash-kpis" aria-live="polite"></div>
+
+      <!-- The next 7 days: tap a day to see it in the calendar -->
+      <div class="card week-strip" id="dash-week" aria-label="The next 7 days"></div>
 
       <!-- Main grid: Urgent + At-Risk | Workload + Category -->
       <div class="two-col">

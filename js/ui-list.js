@@ -168,29 +168,16 @@ function renderActiveFilters() {
 }
 
 // ─── Badge Helpers ───────────────────────────────────────────────
+// Priority and status badges take their colours from the theme (styles.css
+// .prio-* / .st-*), so they stay readable in light and dark mode.
 function priorityBadge(priority) {
-  const map = {
-    critical: '#f87171',
-    high:     '#fb923c',
-    medium:   '#fbbf24',
-    low:      '#6b7280',
-  };
-  const color = map[priority] || 'var(--muted)';
-  return `<span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${escapeHTML(priority || 'medium')}</span>`;
+  const p = ['critical', 'high', 'medium', 'low'].includes(priority) ? priority : 'medium';
+  return `<span class="badge prio prio-${p}">${escapeHTML(priority || 'medium')}</span>`;
 }
 
 function statusBadge(status, isOverdue) {
   if (isOverdue) return `<span class="badge badge-red">Overdue</span>`;
-  const map = {
-    'not-started': ['var(--muted)', '#3f3f4e'],
-    'planned':     ['var(--blue)', '#1e3a5f'],
-    'in-progress': ['var(--teal)', '#0f3535'],
-    'at-risk':     ['var(--gold)', '#3f3000'],
-    'overdue':     ['var(--red)', '#3f0000'],
-    'completed':   ['var(--green)', '#0a2f0a'],
-    'paused':      ['var(--muted)', '#2a2a3a'],
-    'canceled':    ['#6b7280', '#222'],
-  };
-  const [fg, bg] = map[status] || ['var(--muted)', 'transparent'];
-  return `<span class="badge" style="color:${fg};background:${bg}">${escapeHTML(status || 'not-started')}</span>`;
+  const known = ['not-started', 'planned', 'in-progress', 'at-risk', 'overdue', 'completed', 'paused', 'canceled'];
+  const s = known.includes(status) ? status : 'not-started';
+  return `<span class="badge st st-${s}">${escapeHTML(status || 'not-started')}</span>`;
 }

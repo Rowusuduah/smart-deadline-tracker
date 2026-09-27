@@ -20,6 +20,7 @@ const APP_SHELL  = [
   './js/app.js',
   './icons/icon.svg',
   './manifest.json',
+  './fonts/Geist-latin.woff2',
 ];
 
 // Pre-cache the app shell on install
