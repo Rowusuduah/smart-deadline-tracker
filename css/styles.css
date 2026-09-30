@@ -53,7 +53,7 @@
   --font-mono:    'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --nav-h:    60px;
-  --tabbar-h: 62px;
+  --tabbar-h: 68px;
   --radius:   20px;
   --radius-sm:12px;
   --shadow:   none;
@@ -1185,15 +1185,14 @@ body.light .toast-success { color: #FFFFFF; }
     height: calc(var(--tabbar-h) + var(--safe-bottom));
     padding: 4px 4px var(--safe-bottom);
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0;
-    background: var(--nav-bg);
-    -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px);
+    background: var(--surf);
     border-top: 1px solid var(--border);
     overflow: visible;
   }
   #tab-timeline, #tab-analytics, #tab-settings { display: none; }
   [role="tab"], .nav-more {
     flex-direction: column; justify-content: center;
-    height: auto; min-height: 54px; padding: 4px 0 2px; gap: 3px;
+    height: 100%; min-height: 0; padding: 4px 0; gap: 3px;
     font-size: 10.5px; font-weight: 500; border-radius: 10px;
   }
   [role="tab"] svg, .nav-more svg { width: 22px; height: 22px; }
@@ -1203,7 +1202,7 @@ body.light .toast-success { color: #FFFFFF; }
   .nav-more {
     display: flex; align-items: center;
     position: fixed; right: 4px; bottom: calc(4px + var(--safe-bottom)); z-index: 202;
-    width: calc((100vw - 8px) / 5);
+    width: calc((100vw - 8px) / 5); height: calc(var(--tabbar-h) - 8px);
     background: transparent; border: 0; color: var(--muted);
   }
   .nav-more.on, .nav-more[aria-expanded="true"] { color: var(--accent-text); font-weight: 600; }
