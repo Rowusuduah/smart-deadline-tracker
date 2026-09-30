@@ -257,6 +257,7 @@ const TABS = [
 ];
 
 function switchTab(targetTabId) {
+  if (targetTabId !== 'tab-calendar' && typeof closeCalendarPopup === 'function') closeCalendarPopup();
   TABS.forEach(({ tabId, secId }) => {
     const tab = document.getElementById(tabId);
     const sec = document.getElementById(secId);
@@ -276,6 +277,7 @@ function switchTab(targetTabId) {
   if (targetTabId === 'tab-focus')     renderFocusTab();
   if (targetTabId === 'tab-analytics') renderAnalyticsTab();
   if (targetTabId === 'tab-settings')  { renderSettingsTab(); populateCategorySelects(); }
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function renderAll() {
@@ -399,26 +401,32 @@ function buildModalForm(id) {
   ).join('');
 
   const statusOptions = ['not-started','planned','in-progress','at-risk','paused','completed','canceled']
-    .map(s => `<option value="${s}" ${d.status === s ? 'selected' : ''}>${s}</option>`).join('');
+    .map(s => `<option value="${s}" ${d.status === s ? 'selected' : ''}>${s.replace(/(^|-)([a-z])/g, (_, _sep, letter) => (_sep ? ' ' : '') + letter.toUpperCase())}</option>`).join('');
 
   const priorityOptions = ['critical','high','medium','low']
-    .map(p => `<option value="${p}" ${d.priority === p ? 'selected' : ''}>${p}</option>`).join('');
+    .map(p => `<option value="${p}" ${d.priority === p ? 'selected' : ''}>${p[0].toUpperCase() + p.slice(1)}</option>`).join('');
 
   const subtasksHtml = (d.subtasks || []).map((s, i) => subtaskRowHtml(s, i)).join('');
 
   document.getElementById('modal-form-body').innerHTML = `
-    <div class="form-grid">
+    <div class="form-grid modal-basic-fields">
       <div class="form-group" style="grid-column:1/-1">
-        <label for="modal-title-input">Title *</label>
+        <label for="modal-title-input">What needs to be done? *</label>
         <input type="text" id="modal-title-input" value="${escapeHTML(d.title)}" placeholder="e.g. Submit lab report" maxlength="200" required>
       </div>
+      <div class="form-group">
+        <label for="modal-due-date">When is it due? *</label>
+        <input type="date" id="modal-due-date" value="${isEditing ? escapeHTML(d.dueDate || '') : ''}" required>
+      </div>
+    </div>
+    <p class="modal-simple-note">That is enough to get started. You can add planning details now or later.</p>
+    <details class="modal-options" id="modal-options" ${isEditing ? 'open' : ''}>
+      <summary>More options <span>Category, priority, subtasks and more</span></summary>
+      <div class="modal-options-body">
+    <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1">
         <label for="modal-desc">Description</label>
         <textarea id="modal-desc" rows="2" maxlength="2000" placeholder="Optional notes...">${escapeHTML(d.description || '')}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="modal-due-date">Due Date *</label>
-        <input type="date" id="modal-due-date" value="${escapeHTML(d.dueDate || '')}" required>
       </div>
       <div class="form-group">
         <label for="modal-due-time">Due Time</label>
@@ -493,6 +501,8 @@ function buildModalForm(id) {
         </label>
       </div>
     </div>
+      </div>
+    </details>
   `;
 
   // Wire up progress slider (replaces removed inline oninput handler)
@@ -840,7 +850,8 @@ function bindEvents() {
       if (tab) switchTab(tab.id);
     });
     tablist.addEventListener('keydown', e => {
-      const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+      const tabs = [...tablist.querySelectorAll('[role="tab"]')]
+        .filter(tab => getComputedStyle(tab).display !== 'none');
       const idx  = tabs.indexOf(document.activeElement);
       if (idx === -1) return;
       if (e.key === 'ArrowRight') { e.preventDefault(); const n = tabs[(idx+1) % tabs.length]; n.focus(); switchTab(n.id); }
@@ -880,6 +891,27 @@ function bindEvents() {
   // Global add buttons
   document.getElementById('btn-add-deadline')?.addEventListener('click', () => openModal());
   document.getElementById('btn-add-deadline-list')?.addEventListener('click', () => openModal());
+  document.getElementById('dash-hero')?.addEventListener('click', e => {
+    if (e.target.closest('#dash-add-first')) openModal();
+  });
+  document.getElementById('deadlines-list')?.addEventListener('click', e => {
+    if (e.target.closest('#list-empty-add')) { openModal(); return; }
+    if (e.target.closest('#list-show-archived-btn')) {
+      AppState.list.showArchived = true;
+      document.getElementById('list-show-archived').checked = true;
+      document.getElementById('list-filter-options').open = true;
+      renderListItems(); renderActiveFilters();
+      return;
+    }
+    if (!e.target.closest('#list-clear-filters')) return;
+    Object.assign(AppState.list, { search: '', category: '', status: '', priority: '', showArchived: false });
+    document.getElementById('list-search').value = '';
+    ['list-filter-category', 'list-filter-status', 'list-filter-priority'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('list-show-archived').checked = false;
+    renderListItems(); renderActiveFilters();
+  });
 
   // Modal
   document.getElementById('modal-close')?.addEventListener('click', closeModal);
@@ -906,6 +938,7 @@ function bindEvents() {
     if (e.key === 'Escape') {
       if (AppState.modalOpen)  { closeModal(); return; }
       if (AppState.detailOpen) { closeDetailPanel(); return; }
+      if (document.getElementById('cal-popup')?.classList.contains('open')) closeCalendarPopup();
     }
   });
 
@@ -959,6 +992,9 @@ function bindEvents() {
     if (field === 'status')   AppState.list.status   = '';
     if (field === 'priority') AppState.list.priority = '';
     if (field === 'showArchived') AppState.list.showArchived = false;
+    const controls = { category: 'list-filter-category', status: 'list-filter-status', priority: 'list-filter-priority' };
+    if (controls[field]) document.getElementById(controls[field]).value = '';
+    if (field === 'showArchived') document.getElementById('list-show-archived').checked = false;
     renderListItems(); renderActiveFilters();
   });
 

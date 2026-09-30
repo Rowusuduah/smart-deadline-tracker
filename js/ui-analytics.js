@@ -145,20 +145,27 @@ function renderProcrastinationInsights(deadlines) {
   const el = document.getElementById('analytics-procrastination');
   if (!el) return;
 
+  if (!deadlines.some(d => d.status === 'completed' || d.postponeCount > 0)) {
+    el.innerHTML = '<p class="text-muted">Patterns will appear after you complete or reschedule a deadline.</p>';
+    return;
+  }
+
   const insights = getProcrastinationInsights(deadlines);
   const rows = [];
 
-  rows.push(insightRow('Average Postponements per Item',
+  rows.push(insightRow('Average date changes per deadline',
     insights.avgPostponeCount !== null ? `${insights.avgPostponeCount}` : '—',
     insights.avgPostponeCount >= 2 ? 'red' : insights.avgPostponeCount >= 1 ? 'gold' : 'green',
-    insights.avgPostponeCount >= 2 ? 'High delay tendency detected' : 'Good discipline'
+    insights.avgPostponeCount >= 2 ? 'Try breaking larger work into smaller steps' : 'Your dates have been fairly steady'
   ));
 
-  rows.push(insightRow('Overdue Rate',
-    insights.overdueRate !== null ? `${insights.overdueRate}%` : '—',
-    insights.overdueRate > 30 ? 'red' : insights.overdueRate > 15 ? 'gold' : 'green',
-    insights.overdueRate > 30 ? 'Many deadlines are completed late' : 'Within acceptable range'
-  ));
+  if (insights.overdueRate !== null) {
+    rows.push(insightRow('Finished after due date',
+      `${insights.overdueRate}%`,
+      insights.overdueRate > 30 ? 'red' : insights.overdueRate > 15 ? 'gold' : 'green',
+      insights.overdueRate > 30 ? 'Consider adding more buffer time' : 'Most completed work landed on time'
+    ));
+  }
 
   // Most overdue category
   const catOverdue = insights.catOverdue;
@@ -171,9 +178,9 @@ function renderProcrastinationInsights(deadlines) {
     if (rate > worstRate && total >= 2) { worstRate = rate; worstCat = cat; }
   });
   if (worstCat) {
-    rows.push(insightRow('Most Neglected Category', escapeHTML(worstCat),
+    rows.push(insightRow('Category with most date pressure', escapeHTML(worstCat),
       worstRate > 0.5 ? 'red' : 'gold',
-      `${Math.round(worstRate * 100)}% of items overdue or late`
+      `${Math.round(worstRate * 100)}% of items overdue or finished late`
     ));
   }
 

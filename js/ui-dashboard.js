@@ -11,6 +11,9 @@ function renderDashboard() {
   const deadlines = loadDeadlines();
   const stats = getDashboardStats(deadlines, settings);
 
+  sec.classList.toggle('dash-empty', stats.totalActive === 0);
+  renderDashboardHero(stats, deadlines.length > 0);
+
   renderDashboardKPIs(stats);
   renderDashboardWeek(deadlines);
   renderDashboardUrgentPanel(stats);
@@ -19,17 +22,43 @@ function renderDashboard() {
   renderDashboardDueToday(stats);
 }
 
+function renderDashboardHero(stats, hasHistory) {
+  const el = document.getElementById('dash-hero');
+  if (!el) return;
+  if (stats.totalActive === 0) {
+    el.innerHTML = `<div class="dash-hero-copy">
+      <span class="dash-eyebrow">${hasHistory ? 'All caught up' : 'A fresh start'}</span>
+      <h2>${hasHistory ? 'Your list is clear.' : 'Start with one thing that matters.'}</h2>
+      <p>${hasHistory ? 'You have no open deadlines. Add the next one when you are ready.' : 'Give it a name and a due date. You can plan the details later.'}</p>
+      <button type="button" class="btn btn-green" id="dash-add-first">Add a deadline</button>
+    </div>`;
+    return;
+  }
+
+  const needsAttention = stats.overdueCount + stats.dueTodayCount;
+  const message = stats.overdueCount > 0
+    ? `${stats.overdueCount} overdue ${stats.overdueCount === 1 ? 'deadline needs' : 'deadlines need'} a decision.`
+    : stats.dueTodayCount > 0
+      ? `${stats.dueTodayCount} ${stats.dueTodayCount === 1 ? 'deadline is' : 'deadlines are'} due today.`
+      : stats.dueWeekCount > 0
+        ? `${stats.dueWeekCount} coming up in the next seven days.`
+        : 'Nothing due soon. Use this space to stay ahead.';
+  el.innerHTML = `<div class="dash-hero-copy">
+    <span class="dash-eyebrow">Your next move</span>
+    <h2>${escapeHTML(message)}</h2>
+    <p>${needsAttention ? 'Choose one item to move forward now.' : 'See what is next, then take one small step.'}</p>
+    <button type="button" class="btn btn-green" data-action="switch-tab" data-tab="tab-focus">Open Focus</button>
+  </div>`;
+}
+
 // ─── KPI Strip ───────────────────────────────────────────────────
 function renderDashboardKPIs(stats) {
   const el = document.getElementById('dash-kpis');
   if (!el) return;
   el.innerHTML = [
-    kpiCard('Active',    stats.totalActive,   '',        stats.totalActive === 0 ? 'var(--muted)' : 'var(--text)'),
-    kpiCard('Overdue',   stats.overdueCount,  'need attention', stats.overdueCount > 0 ? 'var(--red)' : 'var(--text)'),
-    kpiCard('Due Today', stats.dueTodayCount, 'items',   stats.dueTodayCount > 0 ? 'var(--orange)' : 'var(--text)'),
-    kpiCard('This Week', stats.dueWeekCount,  'upcoming','var(--text)'),
-    kpiCard('At Risk',   stats.atRiskCount,   '',        stats.atRiskCount > 0 ? 'var(--gold)' : 'var(--text)'),
-    kpiCard('Completed', stats.completedCount,'total',   'var(--green)'),
+    kpiCard('Open', stats.totalActive, '', 'var(--text)'),
+    kpiCard('Due this week', stats.dueWeekCount + stats.dueTodayCount, '', 'var(--text)'),
+    kpiCard('Needs attention', new Set([...stats.overdue, ...stats.atRisk].map(d => d.id)).size, '', stats.overdueCount + stats.atRiskCount > 0 ? 'var(--red)' : 'var(--text)'),
   ].join('');
 }
 

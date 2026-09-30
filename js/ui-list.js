@@ -27,23 +27,29 @@ function renderListItems() {
   const sorted = sortDeadlines(filtered, f.sort);
 
   if (!sorted.length) {
-    el.innerHTML = emptyState('📋', f.search ? 'No deadlines match your search.' : 'No deadlines yet. Add one above!');
+    const hasOpenList = rawList.some(d => !d.isArchived && d.status !== 'archived');
+    el.innerHTML = hasOpenList
+      ? `<div class="list-empty"><div class="list-empty-mark" aria-hidden="true">⌕</div><h2>Nothing matches these filters</h2><p>Try another search or show all deadlines.</p><button type="button" class="btn btn-ghost" id="list-clear-filters">Show all deadlines</button></div>`
+      : rawList.length
+        ? `<div class="list-empty"><div class="list-empty-mark" aria-hidden="true">✓</div><h2>No open deadlines</h2><p>Your previous work is still here if you need it.</p><button type="button" class="btn btn-ghost" id="list-show-archived-btn">See archived deadlines</button><button type="button" class="btn btn-green" id="list-empty-add">Add a deadline</button></div>`
+        : `<div class="list-empty"><div class="list-empty-mark" aria-hidden="true">✓</div><h2>A clear place to begin</h2><p>Add your first deadline with a name and due date. You can plan the rest later.</p><button type="button" class="btn btn-green" id="list-empty-add">Add a deadline</button></div>`;
     return;
   }
 
-  // Group by: overdue → today → upcoming
-  const overdue    = sorted.filter(d => d._isOverdue);
-  const today      = sorted.filter(d => !d._isOverdue && d.dueDate === todayISO() && d.status !== 'completed');
-  const upcoming   = sorted.filter(d => !d._isOverdue && d.dueDate !== todayISO() && d.status !== 'completed');
-  const completed  = sorted.filter(d => d.status === 'completed');
-  const archived   = sorted.filter(d => d.isArchived || d.status === 'archived');
+  // Closed work belongs in one group, regardless of its old due date.
+  const closed     = sorted.filter(d => d.isArchived || ['archived', 'canceled'].includes(d.status));
+  const live       = sorted.filter(d => !d.isArchived && !['archived', 'canceled'].includes(d.status));
+  const overdue    = live.filter(d => d._isOverdue);
+  const today      = live.filter(d => !d._isOverdue && d.dueDate === todayISO() && d.status !== 'completed');
+  const upcoming   = live.filter(d => !d._isOverdue && d.dueDate !== todayISO() && d.status !== 'completed');
+  const completed  = live.filter(d => d.status === 'completed');
 
   let html = '';
   if (overdue.length)   html += groupSection('Overdue', overdue, f.viewMode);
   if (today.length)     html += groupSection('Due Today', today, f.viewMode);
   if (upcoming.length)  html += groupSection('Upcoming', upcoming, f.viewMode);
   if (completed.length) html += groupSection('Completed', completed, f.viewMode);
-  if (archived.length && f.showArchived) html += groupSection('Archived', archived, f.viewMode);
+  if (closed.length && f.showArchived) html += groupSection('Archived or canceled', closed, f.viewMode);
 
   el.innerHTML = html;
 
@@ -160,10 +166,10 @@ function renderActiveFilters() {
   if (!el) return;
   const f = AppState.list;
   const badges = [];
-  if (f.category) badges.push(`<span class="filter-chip" data-clear="category">Category: ${escapeHTML(f.category)} ×</span>`);
-  if (f.status)   badges.push(`<span class="filter-chip" data-clear="status">Status: ${escapeHTML(f.status)} ×</span>`);
-  if (f.priority) badges.push(`<span class="filter-chip" data-clear="priority">Priority: ${escapeHTML(f.priority)} ×</span>`);
-  if (f.showArchived) badges.push(`<span class="filter-chip" data-clear="showArchived">Showing archived ×</span>`);
+  if (f.category) badges.push(`<button type="button" class="filter-chip" data-clear="category" aria-label="Clear category filter">Category: ${escapeHTML(f.category)} ×</button>`);
+  if (f.status)   badges.push(`<button type="button" class="filter-chip" data-clear="status" aria-label="Clear status filter">Status: ${escapeHTML(f.status)} ×</button>`);
+  if (f.priority) badges.push(`<button type="button" class="filter-chip" data-clear="priority" aria-label="Clear priority filter">Priority: ${escapeHTML(f.priority)} ×</button>`);
+  if (f.showArchived) badges.push(`<button type="button" class="filter-chip" data-clear="showArchived" aria-label="Hide archived deadlines">Showing archived ×</button>`);
   el.innerHTML = badges.join('');
 }
 

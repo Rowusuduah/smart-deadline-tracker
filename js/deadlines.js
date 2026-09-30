@@ -201,19 +201,18 @@ function filterDeadlines(enrichedList, filters) {
     list = list.filter(d => d.category === f.category);
   }
 
+  if (!f.showArchived) {
+    list = list.filter(d => !d.isArchived && !['archived', 'canceled'].includes(d.status));
+  }
+
   // Status
   if (f.status) {
     if (f.status === 'active') {
-      list = list.filter(d => !['completed','archived','canceled'].includes(d.status));
+      list = list.filter(d => !d.isArchived && !['completed','archived','canceled'].includes(d.status));
     } else if (f.status === 'overdue') {
       list = list.filter(d => d._isOverdue);
     } else {
       list = list.filter(d => d.status === f.status);
-    }
-  } else {
-    // Default: hide archived and canceled
-    if (!f.showArchived) {
-      list = list.filter(d => !d.isArchived && d.status !== 'canceled');
     }
   }
 
