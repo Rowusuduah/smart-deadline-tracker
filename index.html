@@ -59,7 +59,7 @@
     </div>
 
     <div role="tablist" aria-label="App sections">
-      <button role="tab" id="tab-dashboard" aria-selected="true"  aria-controls="sec-dashboard" tabindex="0"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>Dashboard</span></button>
+      <button role="tab" id="tab-dashboard" aria-selected="true"  aria-controls="sec-dashboard" tabindex="0"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>Today</span></button>
       <button role="tab" id="tab-deadlines" aria-selected="false" aria-controls="sec-deadlines" tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M3.5 6l1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/></svg><span>Deadlines</span></button>
       <button role="tab" id="tab-calendar"  aria-selected="false" aria-controls="sec-calendar"  tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>Calendar</span></button>
       <button role="tab" id="tab-timeline"  aria-selected="false" aria-controls="sec-timeline"  tabindex="-1"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h9M7 12h10M11 18h10"/></svg><span>Timeline</span></button>
@@ -86,8 +86,10 @@
 
     <!-- ══ DASHBOARD ════════════════════════════════════════════ -->
     <section id="sec-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" class="sec on">
-      <h1 class="section-title">Dashboard</h1>
-      <p class="section-sub">Your deadline intelligence at a glance.</p>
+      <h1 class="section-title">Today</h1>
+      <p class="section-sub">One clear next step, with the rest close by.</p>
+
+      <div id="dash-hero" class="dash-hero" aria-live="polite"></div>
 
       <!-- KPI Strip -->
       <div class="summary-grid" id="dash-kpis" aria-live="polite"></div>
@@ -95,37 +97,35 @@
       <!-- The next 7 days: tap a day to see it in the calendar -->
       <div class="card week-strip" id="dash-week" aria-label="The next 7 days"></div>
 
-      <!-- Main grid: Urgent + At-Risk | Workload + Category -->
+      <!-- The next action first; supporting planning context is optional. -->
       <div class="two-col">
-
-        <!-- Left column -->
         <div>
-          <div class="card">
+          <div class="card" id="dash-urgent-card">
             <div class="card-title">
-              Top Urgent
+              Next up
               <button class="btn btn-ghost btn-sm" data-action="switch-tab" data-tab="tab-deadlines">View all →</button>
             </div>
             <div id="dash-urgent" aria-live="polite"></div>
           </div>
 
-          <div class="card">
+        </div>
+
+        <details class="card dash-planning">
+          <summary>Planning details <span>Due now, risk and categories</span></summary>
+          <div id="dash-due-card">
             <div class="card-title">Due Today &amp; Overdue</div>
             <div id="dash-due-today" aria-live="polite"></div>
           </div>
-        </div>
-
-        <!-- Right column -->
-        <div>
-          <div class="card">
+          <div class="card" id="dash-risk-card">
             <div class="card-title">At Risk</div>
             <div id="dash-at-risk" aria-live="polite"></div>
           </div>
 
-          <div class="card">
+          <div class="card" id="dash-category-card">
             <div class="card-title">Category Load</div>
             <div id="dash-cat-load" aria-live="polite"></div>
           </div>
-        </div>
+        </details>
 
       </div>
     </section>
@@ -136,11 +136,24 @@
         <h1 class="section-title">All Deadlines</h1>
         <button class="btn btn-green btn-sm" id="btn-add-deadline-list">+ Add Deadline</button>
       </div>
-      <p class="section-sub">Search, filter, and manage your full deadline list.</p>
+      <p class="section-sub">Everything you need to finish, in one place.</p>
 
       <!-- Filters -->
       <div class="filter-bar" aria-label="Filters">
         <input type="search" id="list-search" placeholder="Search deadlines…" aria-label="Search deadlines" style="min-width:180px">
+        <select id="list-sort" aria-label="Sort by">
+          <option value="urgency">Most urgent first</option>
+          <option value="due-asc">Due date ↑</option>
+          <option value="due-desc">Due date ↓</option>
+          <option value="priority">Priority</option>
+          <option value="progress-asc">Progress ↑</option>
+          <option value="progress-desc">Progress ↓</option>
+          <option value="title">Title A–Z</option>
+          <option value="created">Newest first</option>
+        </select>
+        <details class="list-filter-options" id="list-filter-options">
+          <summary>More filters</summary>
+          <div class="list-filter-grid">
         <select id="list-filter-category" class="category-select" aria-label="Filter by category">
           <option value="">All Categories</option>
         </select>
@@ -162,16 +175,6 @@
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </select>
-        <select id="list-sort" aria-label="Sort by">
-          <option value="urgency">Sort: Urgency</option>
-          <option value="due-asc">Due Date ↑</option>
-          <option value="due-desc">Due Date ↓</option>
-          <option value="priority">Priority</option>
-          <option value="progress-asc">Progress ↑</option>
-          <option value="progress-desc">Progress ↓</option>
-          <option value="title">Title A–Z</option>
-          <option value="created">Newest First</option>
-        </select>
         <select id="list-view-mode" aria-label="View mode">
           <option value="compact">Compact</option>
           <option value="detailed">Detailed</option>
@@ -179,6 +182,8 @@
         <label style="font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer">
           <input type="checkbox" id="list-show-archived"> Show Archived
         </label>
+          </div>
+        </details>
       </div>
 
       <!-- Active filter chips -->
@@ -238,20 +243,20 @@
 
     <!-- ══ FOCUS MODE ════════════════════════════════════════════ -->
     <section id="sec-focus" role="tabpanel" aria-labelledby="tab-focus" class="sec">
-      <h1 class="section-title">Focus Mode</h1>
-      <p class="section-sub">What to work on right now — no distractions.</p>
+      <h1 class="section-title">Focus</h1>
+      <p class="section-sub">Choose one deadline and make a little progress.</p>
 
       <!-- Nudges -->
       <div id="focus-nudge" aria-live="polite" style="margin-bottom:12px"></div>
 
       <!-- Top 3 -->
       <div class="card" style="margin-bottom:14px">
-        <div class="card-title">Top Priority Actions</div>
+        <div class="card-title">Choose a next step</div>
         <div id="focus-top3" aria-live="polite"></div>
       </div>
 
       <!-- Recovery plan -->
-      <div class="card">
+      <div class="card" id="focus-recovery-card">
         <div class="card-title">Schedule Recovery</div>
         <div id="focus-recovery" aria-live="polite"></div>
       </div>
@@ -271,7 +276,7 @@
           </select>
         </div>
       </div>
-      <p class="section-sub">Understand your patterns, performance, and procrastination tendencies.</p>
+      <p class="section-sub">See what you finish and how your schedule changes.</p>
 
       <!-- KPIs -->
       <div class="summary-grid" id="analytics-kpis" aria-live="polite"></div>
@@ -290,7 +295,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Behavioral Insights</div>
+        <div class="card-title">Planning patterns</div>
         <div id="analytics-procrastination"></div>
       </div>
     </section>
@@ -298,11 +303,11 @@
     <!-- ══ SETTINGS ══════════════════════════════════════════════ -->
     <section id="sec-settings" role="tabpanel" aria-labelledby="tab-settings" class="sec">
       <h1 class="section-title">Settings</h1>
-      <p class="section-sub">Customize your planning assumptions, appearance, and data.</p>
+      <p class="section-sub">Choose how deadlines are planned and how data is saved.</p>
 
       <!-- Planning Settings -->
       <div class="card">
-        <div class="card-title">Planning Assumptions</div>
+        <div class="card-title">Planning preferences</div>
         <div class="form-grid">
           <div class="form-group">
             <label for="set-buffer-days">Buffer Days (before due)</label>
@@ -344,8 +349,8 @@
       </div>
 
       <!-- Category Manager -->
-      <div class="card">
-        <div class="card-title">Categories</div>
+      <details class="card settings-group">
+        <summary class="card-title">Categories</summary>
         <div id="cat-manager-list"></div>
         <div class="form-grid" style="margin-top:12px;grid-template-columns:1fr 1fr auto auto auto">
           <div class="form-group">
@@ -362,11 +367,11 @@
           </div>
         </div>
         <button class="btn btn-ghost btn-sm" id="btn-add-cat" style="margin-top:8px">+ Add Category</button>
-      </div>
+      </details>
 
       <!-- Data Management -->
-      <div class="card">
-        <div class="card-title">Data Management</div>
+      <details class="card settings-group">
+        <summary class="card-title">Back up and move data</summary>
         <div class="controls-bar" style="flex-wrap:wrap">
           <button class="btn btn-ghost" id="btn-export-json">Export JSON</button>
           <button class="btn btn-ghost" id="btn-export-csv">Export CSV</button>
@@ -376,11 +381,11 @@
           </label>
           <button class="btn btn-ghost text-red" id="btn-reset-all">Reset All Data</button>
         </div>
-      </div>
+      </details>
 
       <!-- Google Drive Sync -->
-      <div class="card">
-        <div class="card-title">Google Drive Sync</div>
+      <details class="card settings-group">
+        <summary class="card-title">Google Drive sync</summary>
         <p style="color:var(--muted);font-size:.83rem;margin-bottom:12px;line-height:1.5">
           Back up your data to Google Drive. Requires a Google Cloud OAuth Client ID — add it to <code>js/app.js</code>.
         </p>
@@ -389,16 +394,16 @@
           <button class="btn btn-ghost" id="btn-load-drive">Load from Drive</button>
         </div>
         <p id="gdrive-status" aria-live="polite" style="margin-top:6px;font-size:.78rem;color:var(--muted)"></p>
-      </div>
+      </details>
 
       <!-- About -->
-      <div class="card">
-        <div class="card-title">About</div>
+      <details class="card settings-group">
+        <summary class="card-title">About this app</summary>
         <p style="color:var(--muted);font-size:.83rem;line-height:1.6">
-          <strong>Smart Deadline Tracker</strong> — intelligent deadline management with urgency scoring, workload planning, risk detection, and behavioral insights.<br><br>
+          <strong>Smart Deadline Tracker</strong> helps you capture deadlines, choose a next step, and notice when a due date needs attention.<br><br>
           Data is stored locally in your browser. Use Export/Import or Drive Sync to keep your data safe.
         </p>
-      </div>
+      </details>
     </section>
 
   </main>

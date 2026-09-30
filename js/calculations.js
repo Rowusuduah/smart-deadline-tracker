@@ -162,8 +162,9 @@ function calcRiskLevel(deadline, settings) {
   const postponed   = safeNum(deadline.postponeCount, 0);
 
   if (daysLeft < 0 && progress < 100) return 'critical';
-  if (daysLeft <= 1 && progress < 50) return 'critical';
+  if (daysLeft === 0 && progress < 50 && ['high', 'critical'].includes(deadline.priority)) return 'critical';
 
+  if (daysLeft <= 1 && progress < 50) return 'warning';
   if (daysLeft <= 3 && progress < 30) return 'warning';
   if (daysLeft <= 7 && progress === 0) return 'warning';
   if (postponed >= 2) return 'warning';
@@ -248,7 +249,7 @@ function enrichDeadline(deadline, settings) {
  * Returns an object with counts and grouped arrays.
  */
 function getDashboardStats(deadlines, settings) {
-  const active    = deadlines.filter(d => !['archived','canceled'].includes(d.status));
+  const active    = deadlines.filter(d => !d.isArchived && !['archived','canceled'].includes(d.status));
   const enriched  = active.map(d => enrichDeadline(d, settings));
   const today     = todayISO();
   const weekEnd   = addDays(today, 7);

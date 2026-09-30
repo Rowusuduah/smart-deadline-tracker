@@ -103,7 +103,7 @@ function renderFocusNudge(items, settings) {
   if (startNow.length > 0) {
     nudges.push({
       icon: '⚡',
-      msg:  `${startNow.length} item${startNow.length > 1 ? 's' : ''} due within 2 days ${startNow.length > 1 ? 'have' : 'has'} not been started yet.`,
+      msg:  `${startNow.length} ${startNow.length > 1 ? 'deadlines are' : 'deadline is'} due soon. Pick one small next step.`,
       cls:  'nudge-warning',
     });
   }
@@ -127,6 +127,8 @@ function renderFocusRecovery(items, settings) {
   if (!el) return;
 
   const critical = items.filter(d => d._riskLevel === 'critical' && !d._isOverdue);
+  const card = document.getElementById('focus-recovery-card');
+  if (card) card.hidden = critical.length === 0;
   if (!critical.length) {
     el.innerHTML = `<p class="text-muted" style="font-size:.85rem">No schedule recovery needed. You're on track!</p>`;
     return;

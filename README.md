@@ -1,6 +1,6 @@
 # Smart Deadline Tracker
 
-A comprehensive, intelligent deadline management web app. Not just a to-do list — a full planning intelligence system with urgency scoring, workload analysis, risk detection, and behavioral insights.
+A local-first deadline planner. Capture a name and due date quickly, then add planning details when you need them. It sorts upcoming work by urgency and shows useful risk signals without requiring an elaborate setup.
 
 ## Features
 
@@ -16,19 +16,18 @@ A comprehensive, intelligent deadline management web app. Not just a to-do list 
 ### Smart Intelligence
 - **Urgency Score (0–100)** — automatically ranks every deadline by real urgency
 - **Risk Level** — `safe / warning / critical` based on effort, time, and history
-- **Smart Start Date** — calculates exactly when to start based on hours needed
-- **Daily Effort Needed** — how many hours/day to finish on time
-- **Workload Warnings** — alerts when today or this week is overloaded
-- **Procrastination Detection** — tracks postpone counts, effort underestimation, late patterns
+- **Recommended Start Date** — uses the configurable buffer before a due date
+- **Near-due Signals** — shows deadlines that need attention soon
+- **Schedule Patterns** — tracks date changes and work finished after its due date
 - **Urgency Color System** — red → orange → amber → green → blue by time horizon
 
 ### Views
-1. **Dashboard** — KPI cards, top urgent, at-risk panel, workload bars, category load
-2. **All Deadlines** — search, filter, sort, bulk actions, compact/detailed modes
+1. **Today** — one next move, a seven-day view, and optional planning details
+2. **All Deadlines** — search and sort first; advanced filters, bulk actions, and view modes remain available
 3. **Calendar** — month view with per-day deadline dots, click-to-inspect, quick-add
 4. **Timeline** — upcoming deadlines grouped by week or month
 5. **Focus Mode** — top 3 action items, nudges, schedule recovery plan
-6. **Analytics** — completion trends, on-time rate, effort accuracy, procrastination indicators
+6. **Analytics** — completion trends, on-time rate, and schedule-change patterns
 7. **Settings** — planning assumptions, category manager, theme, export/import
 
 ## Getting Started
@@ -40,7 +39,7 @@ A comprehensive, intelligent deadline management web app. Not just a to-do list 
    # or
    python -m http.server 8080
    ```
-3. Start adding deadlines with **+ Add** in the top nav
+3. On **Today**, choose **Add a deadline**. Enter a name and due date. Open **More options** only when you need categories, subtasks, recurrence, or other planning details.
 
 ## Architecture
 
@@ -80,7 +79,6 @@ base:
 adjustments:
   priority=critical     → +15
   priority=high         → +8
-  dailyEffort > wph     → +12  (workload exceeds capacity)
   progress=0, ≤7 days   → +10
   postponed ≥ 2 times   → +8
 
@@ -91,30 +89,20 @@ result clamped to 0–100
 ```
 critical if:
   - overdue and not complete
-  - dailyEffortNeeded > workHoursPerDay × 1.5
-  - daysLeft ≤ 1 and progress < 50%
+  - due today, priority high/critical, and progress < 50%
 
 warning if:
-  - dailyEffortNeeded > workHoursPerDay × 0.75
+  - due within 1 day and progress < 50%
   - daysLeft ≤ 3 and progress < 30%
-  - daysLeft ≤ 7 and progress = 0 and estimatedHours > 0
+  - daysLeft ≤ 7 and progress = 0
   - postponed ≥ 2 times
 
 safe otherwise
 ```
 
-### Daily Effort Needed
-```
-dailyEffortNeeded = remainingHours / workdaysLeft
-
-remainingHours = estimatedHours × (1 − progress/100)
-workdaysLeft   = count Mon–Fri from today to dueDate (inclusive)
-               = calendar days if includeWeekends = true
-```
-
 ### Recommended Start Date
 ```
-startDate = dueDate − ceil(estimatedHours / workHoursPerDay) − bufferDays
+startDate = dueDate − bufferDays
 clamped to: never before today
 ```
 
